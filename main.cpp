@@ -645,6 +645,10 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnAdd->setTextSize(20);
     btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69)); // Xanh lá
     btnAdd->getRenderer()->setTextColor(tgui::Color::White);
+
+    btnAdd->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
+    btnAdd->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
+    btnAdd->getRenderer()->setRoundedBorderRadius(10);
     rightPanel->add(btnAdd);
 
     auto btnUpdate = tgui::Button::create("CẬP NHẬT");
@@ -653,6 +657,10 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnUpdate->setTextSize(20);
     btnUpdate->getRenderer()->setBackgroundColor(tgui::Color(255, 193, 7)); // Vàng cam
     btnUpdate->getRenderer()->setTextColor(tgui::Color(50, 50, 50));
+
+    btnUpdate->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
+    btnUpdate->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
+    btnUpdate->getRenderer()->setRoundedBorderRadius(10);
     rightPanel->add(btnUpdate);
 
     auto btnDelete = tgui::Button::create("XÓA MÓN");
@@ -661,8 +669,43 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnDelete->setTextSize(20);
     btnDelete->getRenderer()->setBackgroundColor(tgui::Color(220, 53, 69)); // Đỏ
     btnDelete->getRenderer()->setTextColor(tgui::Color::White);
+
+    btnDelete->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
+    btnDelete->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
+    btnDelete->getRenderer()->setRoundedBorderRadius(10);
     rightPanel->add(btnDelete);
 
+    auto updateButtonStates = [=]() {
+    bool hasSelection = !editID->isEnabled();
+    bool isFilled = !editID->getText().empty() && !editName->getText().empty() && 
+                    !editCategory->getText().empty() && !editPrice->getText().empty();
+
+    if (hasSelection) {
+        btnAdd->setText("HỦY CHỌN");
+        btnAdd->getRenderer()->setBackgroundColor(tgui::Color(108, 117, 125));
+        btnAdd->setEnabled(true);
+        btnUpdate->setEnabled(true);
+        btnDelete->setEnabled(true);
+    } else if (isFilled) {
+        btnAdd->setText("THÊM MỚI");
+        btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
+        btnAdd->setEnabled(true);
+        btnUpdate->setEnabled(false);
+        btnDelete->setEnabled(false);
+    } else {
+        btnAdd->setText("THÊM MỚI");
+        btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
+        btnAdd->setEnabled(false);
+        btnUpdate->setEnabled(false);
+        btnDelete->setEnabled(false);
+    }
+    };
+    editID->onTextChange(updateButtonStates);
+    editName->onTextChange(updateButtonStates);
+    editCategory->onTextChange(updateButtonStates);
+    editPrice->onTextChange(updateButtonStates);
+
+    updateButtonStates();
     // =====================================================
     // SỰ KIỆN: Khi click vào 1 dòng trong bảng -> Đổ dữ liệu qua form phải
     // =====================================================
@@ -691,44 +734,65 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
                 try {
                     productImg->getRenderer()->setTexture(imgPath.c_str());
                 } catch (...){
-                    productImg->getRenderer()->setTexture("");
+                    productImg->getRenderer()->setTexture("assets/images/default.png");
                 }
             }
+            updateButtonStates();
         }
     });
 
     //CHỨC NĂNG 1: CẬP NHẬT GIÁ VÀ TRẠNG THÁI
+    //CHỨC NĂNG 1: CẬP NHẬT GIÁ VÀ TRẠNG THÁI
     btnUpdate->onPress([=, &app](){
         string selectedID = editID->getText().toStdString();
+        
         if (selectedID.empty()){
             cout << "[THÔNG BÁO] Vui lòng chọn 1 món để cập nhật!" << endl;
             return;
         }
 
         Product* p = app.getProductManager().findProductByID(selectedID);
-        if (p != nullptr){
-            try {
-                double newPrice = stod(editPrice->getText().toStdString());
-
-                if (!p->changePrice(newPrice)){
-                    cout << "[LỖI] Giá tiền không được là số âm!" << endl;
-                    return;
-                }
-
-                bool isSelling = (comboStatus->getSelectedItemId() == "1");
-                if (isSelling){
-                    p->markAvailable();
-                } else {
-                    p->markUnavailable();
-                }
-
-                refreshListView();
-                
-                cout << "[THÀNH CÔNG] Đã cập nhật món: " << selectedID << endl;
-            } catch (...) {
-                cout << "[LỖI] Đơn giá nhập vào không hợp lệ (chỉ được nhập số)!" << endl;
-            }
+        if (p == nullptr){
+            cout << "[LỖI] Không tìm thấy dữ liệu món này trong hệ thống!" << endl;
+            return;
         }
+
+        auto msgBox = tgui::MessageBox::create("XÁC NHẬN CẬP NHẬT", 
+            "Bạn có chắc chắn muốn cập nhật thông tin cho món " + p->getName() + " không?", 
+            {"Đồng ý", "Hủy"});
+
+        msgBox->setPosition("35%", "35%");
+        msgBox->setTextSize(18);
+        msgBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
+
+        msgBox->onButtonPress([=, &app](const tgui::String& button) {
+            if (button == "Đồng ý") {
+                try {
+                    double newPrice = stod(editPrice->getText().toStdString());
+
+                    if (!p->changePrice(newPrice)){
+                        cout << "[LỖI] Giá tiền không được là số âm!" << endl;
+                    } else {
+                        bool isSelling = (comboStatus->getSelectedItemId() == "1");
+                        if (isSelling){
+                            p->markAvailable();
+                        } else {
+                            p->markUnavailable();
+                        }
+
+                        refreshListView();
+                        
+                        cout << "[THÀNH CÔNG] Đã cập nhật món: " << selectedID << endl;
+                        updateButtonStates();
+                    }
+                } catch (...) {
+                    cout << "[LỖI] Đơn giá nhập vào không hợp lệ (chỉ được nhập số)!" << endl;
+                }
+            }
+            contentPanel->remove(msgBox);
+        });
+
+        contentPanel->add(msgBox);
     });
 
     //CHỨC NĂNG 2: THÊM MỚI MÓN
@@ -749,6 +813,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
             productImg->getRenderer()->setTexture("assets/images/default.png");
 
             cout << "[THÔNG BÁO] Form đã dọn sạch. Hãy nhập thông tin món mới!" << endl;
+            updateButtonStates();
             return;
         }
 
@@ -773,20 +838,44 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
                 cout << "[LỖI] Mã món '" << id << "'đã tồn tại! Vui lòng chọn mã khác." << endl;
                 return;
             }
+            
+            if (app.getProductManager().checkNameExist(name)){
+                cout << "[LỖI] Tên món '" << name << "' đã tồn tại! Vui lòng chọn tên khác." << endl;
+                return;
+            }
 
-            bool isAvailable = (comboStatus->getSelectedItemId() == "1");
-            Product newProduct(id, name, price, cat, isAvailable);
+            auto msgBox = tgui::MessageBox::create("XÁC NHẬN THÊM MỚI", 
+                "Bạn có chắc chắn muốn thêm món mới " + name + " vào menu không?", 
+                {"Đồng ý", "Hủy"});
 
-            app.getProductManager().addProduct(newProduct);
+            msgBox->setPosition("35%", "35%");
+            msgBox->setTextSize(18);
+            msgBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
 
-            refreshListView();
+            msgBox->onButtonPress([=, &app](const tgui::String& button) {
+                if (button == "Đồng ý") {
+                    bool isAvailable = (comboStatus->getSelectedItemId() == "1");
+                    Product newProduct(id, name, price, cat, isAvailable);
 
-            editID->setText("");
-            editName->setText("");
-            editCategory->setText("");
-            editPrice->setText("");
+                    app.getProductManager().addProduct(newProduct);
 
-            cout << "[THÀNH CÔNG] Đã thêm món mới: " << name << endl;
+                    filterCombo->setSelectedItem("Tất cả");
+
+                    refreshListView();
+
+                    editID->setText("");
+                    editName->setText("");
+                    editCategory->setText("");
+                    editPrice->setText("");
+
+                    cout << "[THÀNH CÔNG] Đã thêm món mới: " << name << endl;
+                    updateButtonStates();
+                }
+                contentPanel->remove(msgBox);
+            });
+
+            contentPanel->add(msgBox);
+
         } catch (...){
             cout << "[LỖI] Đơn giá nhập vào không hợp lệ (chỉ được nhập số)!" << endl;
         }
@@ -801,25 +890,41 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
             return;
         }
 
-        bool isDeleted = app.getProductManager().removeProduct(selectedID);
+        auto msgBox = tgui::MessageBox::create("XÁC NHẬN XÓA MÓN", 
+            "Bạn có chắc chắn muốn xóa vĩnh viễn món " + selectedID + " khỏi hệ thống không?", 
+            {"Đồng ý", "Hủy"});
 
-        if (isDeleted){
-            refreshListView();
+        msgBox->setPosition("35%", "35%");
+        msgBox->setTextSize(18);
+        msgBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
 
-            editID->setText("");
-            editName->setText("");
-            editCategory->setText("");
-            editPrice->setText("");
-            comboStatus->setSelectedItemById("1");
+        msgBox->onButtonPress([=, &app](const tgui::String& button) {
+            if (button == "Đồng ý") {
+                bool isDeleted = app.getProductManager().removeProduct(selectedID);
 
-            editID->setEnabled(true);
-            editName->setEnabled(true);
-            editCategory->setEnabled(true);
+                if (isDeleted){
+                    refreshListView();
 
-            cout << "[THÀNH CÔNG] Đã xóa món: " << selectedID << endl;
-        } else {
-            cout << "[LỖI] Không thể xóa! Có thể mã món không tồn tại." << endl;
-        }
+                    editID->setText("");
+                    editName->setText("");
+                    editCategory->setText("");
+                    editPrice->setText("");
+                    comboStatus->setSelectedItemById("1");
+
+                    editID->setEnabled(true);
+                    editName->setEnabled(true);
+                    editCategory->setEnabled(true);
+
+                    cout << "[THÀNH CÔNG] Đã xóa món: " << selectedID << endl;
+                    updateButtonStates();
+                } else {
+                    cout << "[LỖI] Không thể xóa! Có thể mã món không tồn tại." << endl;
+                }
+            }
+            contentPanel->remove(msgBox);
+        });
+
+        contentPanel->add(msgBox);
     });
 
     auto performSearch = [=]() {
@@ -837,6 +942,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
         editName->setEnabled(true);
         editCategory->setEnabled(true);
         productImg->getRenderer()->setTexture("assets/images/default.png");
+        updateButtonStates();
     };
 
     btnSearch->onPress(performSearch);

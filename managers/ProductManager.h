@@ -8,6 +8,7 @@ class ProductManager{
         std::vector<Product*> products;
         
     public:
+        bool checkNameExist(std::string name);
         bool addProduct(const Product& product);
         bool removeProduct(std::string productID);
         bool updateProductPrice(std::string productID, double newPrice);

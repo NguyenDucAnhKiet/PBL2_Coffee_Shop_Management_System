@@ -9,8 +9,20 @@ ProductManager::~ProductManager(){
     products.clear();
 }
 
+bool ProductManager::checkNameExist(string name){
+    for (Product* p : products){
+        if (p->getName() == name){
+            return true;
+        }
+    }
+    return false;
+}
+
 bool ProductManager::addProduct(const Product& product){
     if (findProductByID(product.getProductID()) != nullptr)
+        return false;
+
+    if (checkNameExist(product.getName()))
         return false;
 
     products.push_back(new Product(product));
