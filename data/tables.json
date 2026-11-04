@@ -1,0 +1,12 @@
+[
+    {
+        "capacity": 4,
+        "status": 0,
+        "tableID": "B01"
+    },
+    {
+        "capacity": 8,
+        "status": 1,
+        "tableID": "B02"
+    }
+]

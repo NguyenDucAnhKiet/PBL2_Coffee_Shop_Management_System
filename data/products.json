@@ -1,0 +1,212 @@
+[
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Cà Phê Đen",
+        "price": 20000.0,
+        "productID": "CF01"
+    },
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Cà Phê Sữa",
+        "price": 20000.0,
+        "productID": "CF02"
+    },
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Espresso",
+        "price": 35000.0,
+        "productID": "CF03"
+    },
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Americano",
+        "price": 39000.0,
+        "productID": "CF04"
+    },
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Cappuccino",
+        "price": 40000.0,
+        "productID": "CF05"
+    },
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Cà Phê Muối",
+        "price": 27000.0,
+        "productID": "CF06"
+    },
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Bạc Xỉu",
+        "price": 27000.0,
+        "productID": "CF07"
+    },
+    {
+        "available": true,
+        "category": "Cà phê",
+        "name": "Bạc Xỉu Kem Muối",
+        "price": 29000.0,
+        "productID": "CF08"
+    },
+    {
+        "available": false,
+        "category": "Cà phê",
+        "name": "Coldbrew",
+        "price": 39000.0,
+        "productID": "CF09"
+    },
+    {
+        "available": false,
+        "category": "Cà phê",
+        "name": "Latte",
+        "price": 39000.0,
+        "productID": "CF10"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Thanh Đào",
+        "price": 29000.0,
+        "productID": "TR01"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Thạch Vải",
+        "price": 29000.0,
+        "productID": "TR02"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Gừng",
+        "price": 25000.0,
+        "productID": "TR03"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Chanh",
+        "price": 29000.0,
+        "productID": "TR04"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Tắc Xí Muội",
+        "price": 29000.0,
+        "productID": "TR05"
+    },
+    {
+        "available": false,
+        "category": "Trà trái cây",
+        "name": "Trà Sen Mãng Cầu",
+        "price": 32000.0,
+        "productID": "TR06"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Xoài Dưa Lưới",
+        "price": 37000.0,
+        "productID": "TR07"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Ổi Hồng",
+        "price": 32000.0,
+        "productID": "TR08"
+    },
+    {
+        "available": false,
+        "category": "Trà trái cây",
+        "name": "Trà Dâu Tằm",
+        "price": 32000.0,
+        "productID": "TR09"
+    },
+    {
+        "available": true,
+        "category": "Trà trái cây",
+        "name": "Trà Cam Quýt",
+        "price": 24000.0,
+        "productID": "TR10"
+    },
+    {
+        "available": true,
+        "category": "Bánh",
+        "name": "Bánh Chuối",
+        "price": 19000.0,
+        "productID": "BA01"
+    },
+    {
+        "available": true,
+        "category": "Bánh",
+        "name": "Tiramisu",
+        "price": 29000.0,
+        "productID": "BA02"
+    },
+    {
+        "available": true,
+        "category": "Bánh",
+        "name": "Mousse Đào",
+        "price": 29000.0,
+        "productID": "BA03"
+    },
+    {
+        "available": true,
+        "category": "Bánh",
+        "name": "Mousse Cacao",
+        "price": 29000.0,
+        "productID": "BA04"
+    },
+    {
+        "available": true,
+        "category": "Bánh",
+        "name": "Bánh Su Kem",
+        "price": 10000.0,
+        "productID": "BA05"
+    },
+    {
+        "available": false,
+        "category": "Bánh",
+        "name": "Bánh Mì Bơ Tỏi",
+        "price": 25000.0,
+        "productID": "BA06"
+    },
+    {
+        "available": true,
+        "category": "Bánh",
+        "name": "Bánh Bông Lan Trứng Muối",
+        "price": 29000.0,
+        "productID": "BA07"
+    },
+    {
+        "available": false,
+        "category": "Bánh",
+        "name": "Bánh Donut Matcha",
+        "price": 35000.0,
+        "productID": "BA08"
+    },
+    {
+        "available": false,
+        "category": "Bánh",
+        "name": "Bánh Donut Dâu Tây",
+        "price": 35000.0,
+        "productID": "BA09"
+    },
+    {
+        "available": true,
+        "category": "Bánh",
+        "name": "Bánh Cheese Dẻo",
+        "price": 19000.0,
+        "productID": "BA10"
+    }
+]

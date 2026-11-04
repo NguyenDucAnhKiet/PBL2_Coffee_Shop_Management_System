@@ -1,0 +1,66 @@
+[
+    {
+        "amountGiven": 100000.0,
+        "changeReturn": 22000.0,
+        "employeeID": "NV02",
+        "items": [
+            {
+                "product": {
+                    "available": true,
+                    "category": "Cà phê",
+                    "name": "Cà Phê Đen",
+                    "price": 20000.0,
+                    "productID": "CF01"
+                },
+                "quantity": 1
+            },
+            {
+                "product": {
+                    "available": true,
+                    "category": "Trà trái cây",
+                    "name": "Trà Thanh Đào",
+                    "price": 29000.0,
+                    "productID": "TR01"
+                },
+                "quantity": 2
+            }
+        ],
+        "orderDate": "30/10/2026 14:30",
+        "orderID": "ORD01",
+        "status": 1,
+        "tableID": "T01",
+        "type": 0
+    },
+    {
+        "amountGiven": 110000.0,
+        "changeReturn": 3000.0,
+        "employeeID": "NV02",
+        "items": [
+            {
+                "product": {
+                    "available": true,
+                    "category": "Trà trái cây",
+                    "name": "Trà Xoài Dưa Lưới",
+                    "price": 37000.0,
+                    "productID": "TR07"
+                },
+                "quantity": 1
+            },
+            {
+                "product": {
+                    "available": true,
+                    "category": "Cà phê",
+                    "name": "Espresso",
+                    "price": 35000.0,
+                    "productID": "CF03"
+                },
+                "quantity": 2
+            }
+        ],
+        "orderDate": "30/10/2026 15:00",
+        "orderID": "ORD02",
+        "status": 1,
+        "tableID": "NONE",
+        "type": 1
+    }
+]

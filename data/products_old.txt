@@ -1,0 +1,30 @@
+CF01|Cà Phê Đen|20000|Cà phê|1
+CF02|Cà Phê Sữa|20000|Cà phê|1
+CF03|Espresso|35000|Cà phê|1
+CF04|Americano|39000|Cà phê|1
+CF05|Cappuccino|40000|Cà phê|1
+CF06|Cà Phê Muối|27000|Cà phê|1
+CF07|Bạc Xỉu|27000|Cà phê|1
+CF08|Bạc Xỉu Kem Muối|29000|Cà phê|1
+CF09|Coldbrew|39000|Cà phê|0
+CF10|Latte|39000|Cà phê|0
+TR01|Trà Thanh Đào|29000|Trà trái cây|1
+TR02|Trà Thạch Vải|29000|Trà trái cây|1
+TR03|Trà Gừng|25000|Trà trái cây|1
+TR04|Trà Chanh|29000|Trà trái cây|1
+TR05|Trà Tắc Xí Muội|29000|Trà trái cây|1
+TR06|Trà Sen Mãng Cầu|32000|Trà trái cây|0
+TR07|Trà Xoài Dưa Lưới|37000|Trà trái cây|1
+TR08|Trà Ổi Hồng|32000|Trà trái cây|1
+TR09|Trà Dâu Tằm|32000|Trà trái cây|0
+TR10|Trà Cam Quýt|24000|Trà trái cây|1
+BA01|Bánh Chuối|19000|Bánh|1
+BA02|Tiramisu|29000|Bánh|1
+BA03|Mousse Đào|29000|Bánh|1
+BA04|Mousse Cacao|29000|Bánh|1
+BA05|Bánh Su Kem|10000|Bánh|1
+BA06|Bánh Mì Bơ Tỏi|25000|Bánh|0
+BA07|Bánh Bông Lan Trứng Muối|29000|Bánh|1
+BA08|Bánh Donut Matcha|35000|Bánh|0
+BA09|Bánh Donut Dâu Tây|35000|Bánh|0
+BA10|Bánh Cheese Dẻo|19000|Bánh|1
