@@ -387,14 +387,8 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     contentPanel->add(rightPanel);
 }
 
-// =========================================================================
-// MÀN HÌNH QUẢN LÝ MENU (INDEX = 4)
-// Dựa theo Wireframe: Trái (Danh sách + Lọc) - Phải (Chi tiết + Nút chức năng)
-// =========================================================================
 void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
-    // -----------------------------------------------------
     // KHU VỰC TRÁI: DANH SÁCH MÓN & TÌM KIẾM (62% chiều rộng)
-    // -----------------------------------------------------
     auto leftPanel = tgui::Panel::create({"62%", "90%"});
     leftPanel->setPosition("2%", "5%");
     leftPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -403,7 +397,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     leftPanel->getRenderer()->setRoundedBorderRadius(10);
     contentPanel->add(leftPanel);
 
-    // Tiêu đề
     auto lblListTitle = tgui::Label::create("DANH SÁCH MÓN");
     lblListTitle->setPosition("5%", "4%");
     lblListTitle->setTextSize(22);
@@ -412,7 +405,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     lblListTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
     leftPanel->add(lblListTitle);
 
-    // Thanh tìm kiếm
     auto searchBox = tgui::EditBox::create();
     searchBox->setSize("43%", 45);
     searchBox->setPosition("5%", "11%");
@@ -421,7 +413,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     searchBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
     leftPanel->add(searchBox);
 
-    // Bộ lọc theo loại món (ComboBox)
     auto filterCombo = tgui::ComboBox::create();
     filterCombo->setSize("30%", 45);
     filterCombo->setPosition("50%", "11%");
@@ -434,7 +425,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     filterCombo->setSelectedItem("Tất cả");
     leftPanel->add(filterCombo);
 
-    // Nút Tìm kiếm
     auto btnSearch = tgui::Button::create("Tìm");
     btnSearch->setSize("13%", 45);
     btnSearch->setPosition("82%", "11%");
@@ -443,7 +433,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnSearch->getRenderer()->setTextColor(tgui::Color::White);
     leftPanel->add(btnSearch);
 
-    // Bảng danh sách sản phẩm (ListView)
     auto listView = tgui::ListView::create();
     listView->setSize("90%", "72%");
     listView->setPosition("5%", "20%");
@@ -451,7 +440,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     listView->setItemHeight(45);
     listView->setHeaderHeight(50);
     
-    // Khởi tạo các cột (Bỏ cột Ảnh vì TGUI ListView chuộng hiển thị text)
     listView->addColumn("Mã Món", 175);
     listView->addColumn("Tên Món", 200);
     listView->addColumn("Phân Loại", 175);
@@ -459,7 +447,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     listView->addColumn("Trạng Thái", 175);
     listView->setColumnExpanded(1, true);
 
-    //
     static vector<Product*> currentProducts;
     static int currentPage = 1;
 
@@ -552,9 +539,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     refreshListView();
     leftPanel->add(listView);
 
-    // -----------------------------------------------------
     // KHU VỰC PHẢI: THÔNG TIN CHI TIẾT & CHỨC NĂNG (32% chiều rộng)
-    // -----------------------------------------------------
     auto rightPanel = tgui::Panel::create({"32%", "90%"});
     rightPanel->setPosition("66%", "5%");
     rightPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -571,7 +556,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     lblDetailTitle->getRenderer()->setTextColor(tgui::Color(111, 78, 55));
     rightPanel->add(lblDetailTitle);
 
-    // Khung chứa Ảnh minh họa
     auto productImg = tgui::Picture::create();
     productImg->setSize("35%", tgui::bindWidth(productImg));
     productImg->setPosition("32.5%", "7.5%");
@@ -588,7 +572,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     rightPanel->add(imgBorder);
 
     // Hàm hỗ trợ tạo Label + Input form dọc
-    // Đổi sang float để tinh chỉnh tọa độ chi tiết hơn. Kéo toàn bộ khối lên mốc 38%
     float startY = 39.0f; 
     float rowSpacing = 9.5f;
     
@@ -602,7 +585,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
 
         auto edit = tgui::EditBox::create();
         edit->setSize("60%", 45);
-        // ÉP SÁT LẠI: Rút gọn khoảng cách giữa chữ và ô nhập xuống chỉ còn 2.5% (trước đây là 4%)
         edit->setPosition("35%", (to_string(yOffset) + "%").c_str());
         edit->setTextSize(20);
         edit->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
@@ -611,15 +593,11 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
         return edit;
     };
 
-    // Tạo các ô nhập liệu (Các nhóm giờ chỉ cách nhau 9%)
     auto editID = createInputGroup("Mã món:", "Ví dụ: CF01", startY);
     auto editName = createInputGroup("Tên món:", "Ví dụ: Cà Phê Đen", startY + rowSpacing);
     auto editCategory = createInputGroup("Phân loại:", "Ví dụ: Cà phê", startY + rowSpacing * 2.0f);
     auto editPrice = createInputGroup("Đơn giá (VNĐ):", "Ví dụ: 20000", startY + rowSpacing * 3.0f);
 
-    // 1. KHÓA CÁC TRƯỜNG CỐ ĐỊNH (Không cho phép người dùng gõ vào)
-
-    // 2. THÊM COMBOBOX TRẠNG THÁI (Nằm ở mốc 36%)
     auto lblStatus = tgui::Label::create("Trạng thái:");
     lblStatus->setPosition("5%", (to_string(startY + rowSpacing * 4.0f + 2.0f) + "%").c_str());
     lblStatus->setTextSize(20);
@@ -629,27 +607,23 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
 
     auto comboStatus = tgui::ComboBox::create();
     comboStatus->setSize("60%", 45);
-    // Ép sát ComboBox vào chữ "Trạng thái" với khoảng cách 2.5% y hệt như các ô trên
     comboStatus->setPosition("35%", (to_string(startY + rowSpacing * 4.0f) + "%").c_str());
     comboStatus->setTextSize(20);
     comboStatus->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
-    comboStatus->addItem("Đang bán", "1"); // ID là "1"
-    comboStatus->addItem("Ngừng bán", "0"); // ID là "0"
+    comboStatus->addItem("Đang bán", "1"); 
+    comboStatus->addItem("Ngừng bán", "0"); 
     rightPanel->add(comboStatus);
-    // -----------------------------------------------------
+    
     // KHU VỰC NÚT CHỨC NĂNG (Thêm, Sửa, Xoá)
-    // -----------------------------------------------------
     auto btnAdd = tgui::Button::create("THÊM MỚI");
     btnAdd->setSize("28%", 45);
     btnAdd->setPosition("5%", "88%");
     btnAdd->setTextSize(20);
     btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69)); // Xanh lá
     btnAdd->getRenderer()->setTextColor(tgui::Color::White);
-
     btnAdd->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
     btnAdd->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
     btnAdd->getRenderer()->setRoundedBorderRadius(10);
-    rightPanel->add(btnAdd);
 
     auto btnUpdate = tgui::Button::create("CẬP NHẬT");
     btnUpdate->setSize("28%", 45);
@@ -657,11 +631,9 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnUpdate->setTextSize(20);
     btnUpdate->getRenderer()->setBackgroundColor(tgui::Color(255, 193, 7)); // Vàng cam
     btnUpdate->getRenderer()->setTextColor(tgui::Color(50, 50, 50));
-
     btnUpdate->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
     btnUpdate->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
     btnUpdate->getRenderer()->setRoundedBorderRadius(10);
-    rightPanel->add(btnUpdate);
 
     auto btnDelete = tgui::Button::create("XÓA MÓN");
     btnDelete->setSize("28%", 45);
@@ -669,46 +641,46 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnDelete->setTextSize(20);
     btnDelete->getRenderer()->setBackgroundColor(tgui::Color(220, 53, 69)); // Đỏ
     btnDelete->getRenderer()->setTextColor(tgui::Color::White);
-
     btnDelete->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
     btnDelete->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
     btnDelete->getRenderer()->setRoundedBorderRadius(10);
+
+    rightPanel->add(btnAdd);
+    rightPanel->add(btnUpdate);
     rightPanel->add(btnDelete);
 
     auto updateButtonStates = [=]() {
-    bool hasSelection = !editID->isEnabled();
-    bool isFilled = !editID->getText().empty() && !editName->getText().empty() && 
+        bool hasSelection = !editID->isEnabled();
+        bool isFilled = !editID->getText().empty() && !editName->getText().empty() && 
                     !editCategory->getText().empty() && !editPrice->getText().empty();
 
-    if (hasSelection) {
-        btnAdd->setText("HỦY CHỌN");
-        btnAdd->getRenderer()->setBackgroundColor(tgui::Color(108, 117, 125));
-        btnAdd->setEnabled(true);
-        btnUpdate->setEnabled(true);
-        btnDelete->setEnabled(true);
-    } else if (isFilled) {
-        btnAdd->setText("THÊM MỚI");
-        btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
-        btnAdd->setEnabled(true);
-        btnUpdate->setEnabled(false);
-        btnDelete->setEnabled(false);
-    } else {
-        btnAdd->setText("THÊM MỚI");
-        btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
-        btnAdd->setEnabled(false);
-        btnUpdate->setEnabled(false);
-        btnDelete->setEnabled(false);
-    }
+        if (hasSelection) {
+            btnAdd->setText("HỦY CHỌN");
+            btnAdd->getRenderer()->setBackgroundColor(tgui::Color(108, 117, 125));
+            btnAdd->setEnabled(true);
+            btnUpdate->setEnabled(true);
+            btnDelete->setEnabled(true);
+        } else if (isFilled) {
+            btnAdd->setText("THÊM MỚI");
+            btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
+            btnAdd->setEnabled(true);
+            btnUpdate->setEnabled(false);
+            btnDelete->setEnabled(false);
+        } else {
+            btnAdd->setText("THÊM MỚI");
+            btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
+            btnAdd->setEnabled(false);
+            btnUpdate->setEnabled(false);
+            btnDelete->setEnabled(false);
+        }
     };
     editID->onTextChange(updateButtonStates);
     editName->onTextChange(updateButtonStates);
     editCategory->onTextChange(updateButtonStates);
     editPrice->onTextChange(updateButtonStates);
-
     updateButtonStates();
-    // =====================================================
+    
     // SỰ KIỆN: Khi click vào 1 dòng trong bảng -> Đổ dữ liệu qua form phải
-    // =====================================================
     listView->onItemSelect([=, &app](int index) {
         if (index >= 0) {
             string selectedID = listView->getItemCell(index, 0).toStdString();
@@ -717,7 +689,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
                 editID->setText(p->getProductID());
                 editName->setText(p->getName());
                 editCategory->setText(p->getCategory());
-                // Hiển thị giá số nguyên (không có chữ 'đ' hay dấu phẩy) để dễ cập nhật
                 editPrice->setText(to_string((long long)p->getPrice())); 
                 
                 editID->setEnabled(false);
@@ -725,9 +696,9 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
                 editCategory->setEnabled(false);
 
                 if (p->isAvailable()) {
-                    comboStatus->setSelectedItemById("1"); // 1 tương ứng "Đang bán"
+                    comboStatus->setSelectedItemById("1");
                 } else {
-                    comboStatus->setSelectedItemById("0"); // 0 tương ứng "Ngừng bán"
+                    comboStatus->setSelectedItemById("0");
                 }
 
                 string imgPath = "assets/images/" + p->getProductID() + ".png";
@@ -741,7 +712,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
         }
     });
 
-    //CHỨC NĂNG 1: CẬP NHẬT GIÁ VÀ TRẠNG THÁI
     //CHỨC NĂNG 1: CẬP NHẬT GIÁ VÀ TRẠNG THÁI
     btnUpdate->onPress([=, &app](){
         string selectedID = editID->getText().toStdString();
@@ -950,11 +920,8 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     filterCombo->onItemSelect(performSearch);
 }
 
-
-// =========================================================================
 // 3. HÀM MAIN CHÍNH (ENTRY POINT & EVENT LOOP)
 // Vai trò: Khởi tạo Application, nạp dữ liệu từ file txt, tạo cửa sổ và chạy vòng lặp sự kiện
-// =========================================================================
 int main() {
     // Khởi tạo đối tượng Application chứa toàn bộ các Manager (Product, Person, Table, Order)
     Application app;
