@@ -6,11 +6,14 @@
             "role": 1,
             "username": "admin1"
         },
+        "dob": "15/05/1998",
         "fullName": "Nguyễn Văn Tú",
+        "gender": "Nam",
         "hireDate": "28/10/2026",
         "personID": "QL01",
         "phone": "0123456789",
-        "salary": 5000000.0
+        "salary": 50000.0,
+        "shift": "Hành chính"
     },
     {
         "account": {
@@ -19,11 +22,14 @@
             "role": 0,
             "username": "nhanvien1"
         },
+        "dob": "20/10/2002",
         "fullName": "Trần Thị Ngọc",
+        "gender": "Nữ",
         "hireDate": "28/10/2026",
         "personID": "NV02",
         "phone": "0987654321",
-        "salary": 25000.0
+        "salary": 25000.0,
+        "shift": "Sáng"
     },
     {
         "account": {
@@ -32,10 +38,13 @@
             "role": 0,
             "username": "nhanvien2"
         },
+        "dob": "08/03/2003",
         "fullName": "Nguyễn Như Hà",
+        "gender": "Nữ",
         "hireDate": "28/10/2026",
         "personID": "NV03",
         "phone": "0909090909",
-        "salary": 25000.0
+        "salary": 25000.0,
+        "shift": "Chiều"
     }
 ]

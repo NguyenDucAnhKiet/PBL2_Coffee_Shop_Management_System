@@ -27,15 +27,34 @@ bool PersonManager::disablePerson(string personID){
     return false;
 }
 
-vector<Person*> PersonManager::findPersonsByName(string nameKeyword) const{
+vector<Person*> PersonManager::searchPersons(string keyword, string shiftFilter, string roleFilter) const{
     vector<Person*> result;
-    for (Person* p : persons){
-        if (p->getFullName().find(nameKeyword) != string::npos){
-            result.push_back(p);
+    vector<Person*> allPersons = getAllPersons();
+
+    for (Person* p : allPersons){
+        if (!keyword.empty()){
+            string nameLower = p->getFullName();
+            string idLower = p->getPersonID();
+            string kw = keyword;
+
+            transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+            transform(idLower.begin(), idLower.end(), idLower.begin(), ::tolower);
+            transform(kw.begin(), kw.end(), kw.begin(), ::tolower);
+
+            if (nameLower.find(kw) == string::npos && idLower.find(kw) == string::npos) continue;
         }
+
+        if (shiftFilter != "All" && p->getShift() != shiftFilter) continue;
+        
+        if (roleFilter != "All") {
+            int roleVal = (int)p->getAccount().getRole();
+            if (to_string(roleVal) != roleFilter) continue;
+        }
+        result.push_back(p);
     }
     return result;
 }
+
 
 Person* PersonManager::findPersonByID(string personID){
     for (Person* p : persons){
@@ -64,12 +83,13 @@ vector<Person*> PersonManager::getAllPersons() const{
     return persons;
 }
 
-bool PersonManager::updatePersonInfo(string personID, string newPhone, double newSalary, Role newRole){
+bool PersonManager::updatePersonInfo(string personID, string newPhone, double newSalary, Role newRole, string newShift){
     Person* p = findPersonByID(personID);
     if (p != nullptr){
         p->setPhone(newPhone);
         p->setSalary(newSalary);
         p->getAccount().setRole(newRole);
+        p->setShift(newShift);
         return true;
     }
     return false;

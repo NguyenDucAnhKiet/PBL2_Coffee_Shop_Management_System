@@ -11,7 +11,10 @@ Person::Person(
     string phone,
     double salary,
     string hireDate,
-    Account account
+    Account account,
+    string gender,
+    string shift,
+    string dob
 ){
     this->personID = personID;
     this->fullName = fullName;
@@ -19,6 +22,9 @@ Person::Person(
     this->salary = salary;
     this->hireDate = hireDate;
     this->account = account;
+    this->gender = gender;
+    this->shift = shift;
+    this->dob = dob;
 }
 
 string Person::getPersonID() const {
@@ -31,6 +37,18 @@ string Person::getFullName() const {
 
 string Person::getPhone() const {
     return phone;
+}
+
+string Person::getGender() const {
+    return gender;
+}
+
+string Person::getShift() const {
+    return shift;
+}
+
+string Person::getDob() const {
+    return dob;
 }
 
 double Person::getSalary() const {
@@ -67,4 +85,12 @@ bool Person::setSalary(double salary){
 
     this->salary = salary;
     return true;    
+}
+
+bool Person::setShift(const string& newShift){
+    if (newShift.empty())
+        return false;
+        
+    this->shift = newShift;
+    return true;
 }

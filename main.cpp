@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+﻿#include <SFML/Graphics.hpp>
 #include <TGUI/TGUI.hpp>
 #include <TGUI/Backend/SFML-Graphics.hpp>
 #include <iostream>
@@ -10,6 +10,9 @@
 // Nhúng lớp Application trung tâm quản lý toàn bộ Backend và CurrentUser
 #include "Application.h"
 
+const tgui::Color COL_FRAME_BORDER(227, 217, 204);
+const tgui::Color COL_TEXTBOX_BORDER(207, 194, 179);
+
 using namespace std;
 
 // =========================================================================
@@ -20,6 +23,7 @@ void loadLoginScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app)
 void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app);
 void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app);
 void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app);
+void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app);
 
 // =========================================================================
 // 1. MÀN HÌNH ĐĂNG NHẬP (LOGIN SCREEN)
@@ -194,6 +198,8 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
         if (index == 0) {
             // Load giao diện Trang Chủ
             loadHomeView(contentPanel, app);
+        } else if (index == 3) {
+            loadPersonView(contentPanel, app);
         } else if (index == 4) {
             loadMenuView(contentPanel, app);
         } else {
@@ -918,6 +924,387 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnSearch->onPress(performSearch);
     searchBox->onReturnKeyPress(performSearch);
     filterCombo->onItemSelect(performSearch);
+}
+
+void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
+    contentPanel->removeAllWidgets();
+
+    auto panelEmp = tgui::Panel::create();
+    panelEmp->setSize("100%", "100%");
+    panelEmp->getRenderer()->setBackgroundColor(tgui::Color(245, 240, 235)); // Màu nền be nhạt
+    panelEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    // Đã bỏ panelEmp->getRenderer()->setTextSize(22) để không ghi đè kích thước chữ của các widget con
+
+    // ==========================================
+    // KHỞI TẠO 2 PANEL CON BÊN TRONG (CÁCH ĐỀU MÉP 24PX)
+    // ==========================================
+    auto leftPanel = tgui::Panel::create();
+    leftPanel->setPosition("24", "24");
+    leftPanel->setSize("60% - 36", "100% - 80"); // Đổi 100% - 84 thành 100% - 48 để mép dưới đúng 24px (cách đều trên/dưới/trái/phải)
+    leftPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
+    leftPanel->getRenderer()->setBorderColor(COL_FRAME_BORDER);
+    leftPanel->getRenderer()->setRoundedBorderRadius(10);
+    panelEmp->add(leftPanel, "leftPanel");
+
+    auto rightPanel = tgui::Panel::create();
+    rightPanel->setPosition("60% + 12", "24");
+    rightPanel->setSize("40% - 36", "100% - 80"); // Đổi 100% - 84 thành 100% - 48 để mép dưới đúng 24px (cách đều trên/dưới/trái/phải)
+    rightPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
+    rightPanel->getRenderer()->setBorderColor(COL_FRAME_BORDER);
+    rightPanel->getRenderer()->setRoundedBorderRadius(10);
+    panelEmp->add(rightPanel, "rightPanel");
+
+
+    auto lblLeftTitle = tgui::Label::create("DANH SÁCH NHÂN VIÊN");
+    lblLeftTitle->setPosition("4%", "2.5%"); // Tọa độ mới tính theo leftPanel
+    lblLeftTitle->setTextSize(26);
+    lblLeftTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
+    lblLeftTitle->getRenderer()->setTextColor(tgui::Color(120, 60, 30));
+    lblLeftTitle->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    leftPanel->add(lblLeftTitle);
+    lblLeftTitle->setTextSize(26);
+
+    auto searchEmp = tgui::EditBox::create();
+    searchEmp->setPosition("4%", tgui::bindBottom(lblLeftTitle) + 18);
+    searchEmp->setSize("36%", 60);
+    searchEmp->setTextSize(20);
+    searchEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    searchEmp->setDefaultText("Tìm theo tên nhân viên...");
+    searchEmp->getRenderer()->setRoundedBorderRadius(10);
+    searchEmp->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    leftPanel->add(searchEmp, "searchEmp");
+
+    auto filterShift = tgui::ComboBox::create();
+    filterShift->setPosition("42%", tgui::bindTop(searchEmp));
+    filterShift->setSize("20%", 60);
+    filterShift->setTextSize(20);
+    filterShift->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    filterShift->getRenderer()->setRoundedBorderRadius(10);
+    filterShift->addItem("Tất cả ca", "All");
+    filterShift->addItem("Sáng", "Sáng");
+    filterShift->addItem("Chiều", "Chiều");
+    filterShift->addItem("Tối", "Tối");
+    filterShift->addItem("Hành chính", "Hành chính");
+    filterShift->setSelectedItemById("All");
+    leftPanel->add(filterShift, "filterShift");
+
+    auto filterRole = tgui::ComboBox::create();
+    filterRole->setPosition("64%", tgui::bindTop(searchEmp));
+    filterRole->setSize("22%", 60);
+    filterRole->setTextSize(20);
+    filterRole->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    filterRole->addItem("Tất cả chức vụ", "All");
+    filterRole->addItem("Quản lí", "1");
+    filterRole->addItem("Nhân viên", "0");
+    filterRole->getRenderer()->setRoundedBorderRadius(10);
+    filterRole->setSelectedItemById("All");
+    leftPanel->add(filterRole, "filterRole");
+
+    auto btnSearch = tgui::Button::create("Tìm");
+    btnSearch->setPosition("88%", tgui::bindTop(searchEmp));
+    btnSearch->setSize("8%", 60);
+    btnSearch->setTextSize(20);
+    btnSearch->getRenderer()->setBackgroundColor(tgui::Color(160, 138, 120));
+    btnSearch->getRenderer()->setTextColor(tgui::Color::White);
+    btnSearch->getRenderer()->setBorders(0);
+    btnSearch->getRenderer()->setRoundedBorderRadius(10);
+    btnSearch->getRenderer()->setFont("assets/fonts/BeVietnamPro-SemiBold.ttf");
+    leftPanel->add(btnSearch, "btnSearch");
+
+    auto listEmp = tgui::ListView::create();
+    listEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    listEmp->getRenderer()->setTextSize(20);
+    listEmp->setHeaderTextSize(22);
+    listEmp->setTextSize(20);
+    listEmp->getRenderer()->setHeaderTextColor(tgui::Color(20, 20, 20));
+    listEmp->getRenderer()->setTextColor(tgui::Color(70, 70, 70));
+
+    listEmp->setPosition("4%", tgui::bindBottom(searchEmp) + 18);
+    listEmp->setSize("92%", "100% - y - 48");
+    listEmp->addColumn("MÃ NV", 180);
+    listEmp->addColumn("HỌ TÊN", 0);
+    listEmp->addColumn("CHỨC VỤ", 220);
+    listEmp->addColumn("CA LÀM", 220);
+    listEmp->addColumn("TRẠNG THÁI", 220);
+    listEmp->setColumnExpanded(1, true);
+    listEmp->getRenderer()->setBorderColor(COL_FRAME_BORDER);
+
+    listEmp->setHeaderHeight(56);
+    listEmp->setItemHeight(52);
+
+
+    leftPanel->add(listEmp, "listEmp");
+
+    auto lblPaging = tgui::Label::create("Hiển thị 10 trên 12 nhân viên");
+    lblPaging->setPosition("4%", tgui::bindBottom(listEmp) + 12);
+    lblPaging->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+    leftPanel->add(lblPaging);
+
+
+    // ==========================================
+    // CỘT PHẢI: BỐ CỤC CHIA ĐỀU KHẮP RIGHTPANEL
+    // ==========================================
+    auto lblRightTitle = tgui::Label::create("THÔNG TIN CHI TIẾT");
+    lblRightTitle->setPosition("4.5%", "2.5%");
+    lblRightTitle->setTextSize(26);
+    lblRightTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
+    lblRightTitle->getRenderer()->setTextColor(tgui::Color(120, 60, 30));
+    lblRightTitle->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    rightPanel->add(lblRightTitle);
+    lblRightTitle->setTextSize(26);
+
+    auto styleFormLabel = [](tgui::Label::Ptr lbl) {
+        lbl->setTextSize(22);
+        lbl->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+        lbl->getRenderer()->setTextStyle(tgui::TextStyle::Regular);
+        lbl->getRenderer()->setTextColor(tgui::Color(70, 55, 45));
+    };
+
+    // --- DÒNG 1 ---
+    auto lblID = tgui::Label::create("Mã NV");
+    lblID->setPosition("4.5%", tgui::bindBottom(lblRightTitle) + 44);
+    styleFormLabel(lblID);
+    rightPanel->add(lblID);
+    
+    auto editEmpID = tgui::EditBox::create();
+    editEmpID->setPosition("4.5%", tgui::bindBottom(lblID) + 8);
+    editEmpID->setSize("44.5%", 66);
+    editEmpID->setTextSize(20);
+    editEmpID->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    editEmpID->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    editEmpID->getRenderer()->setRoundedBorderRadius(10);
+    editEmpID->setReadOnly(true); 
+    editEmpID->getRenderer()->setBackgroundColor(tgui::Color(242, 236, 230));
+    editEmpID->getRenderer()->setTextColor(tgui::Color(80, 70, 60));
+    rightPanel->add(editEmpID, "editEmpID");
+
+    auto lblName = tgui::Label::create("Họ tên");
+    lblName->setPosition("51.0%", tgui::bindTop(lblID));
+    styleFormLabel(lblName);
+    rightPanel->add(lblName);
+    
+    auto editEmpName = tgui::EditBox::create();
+    editEmpName->setPosition("51.0%", tgui::bindBottom(lblName) + 8);
+    editEmpName->setSize("44.5%", 66);
+    editEmpName->setTextSize(20);
+    editEmpName->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    editEmpName->getRenderer()->setRoundedBorderRadius(10);
+    editEmpName->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    editEmpName->setDefaultText("Nhập họ tên");
+    rightPanel->add(editEmpName, "editEmpName");
+
+
+    // --- DÒNG 2 ---
+    auto lblGender = tgui::Label::create("Giới tính");
+    lblGender->setPosition("4.5%", tgui::bindBottom(editEmpID) + 44);
+    styleFormLabel(lblGender);
+    rightPanel->add(lblGender);
+    
+    auto radioMale = tgui::RadioButton::create();
+    radioMale->setText("Nam");
+    radioMale->setSize(28, 28);
+    radioMale->setTextSize(20);
+    radioMale->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    radioMale->getRenderer()->setTextColor(tgui::Color(60, 50, 45));
+    radioMale->setPosition("4.5%", tgui::bindBottom(lblGender) + 44);
+    rightPanel->add(radioMale, "radioMale");
+    
+    auto radioFemale = tgui::RadioButton::create();
+    radioFemale->setText("Nữ");
+    radioFemale->setSize(28, 28);
+    radioFemale->setTextSize(20);
+    radioFemale->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    radioFemale->getRenderer()->setTextColor(tgui::Color(60, 50, 45));
+    radioFemale->setPosition("4.5% + 110", tgui::bindTop(radioMale));
+    rightPanel->add(radioFemale, "radioFemale");
+
+    auto lblDOB = tgui::Label::create("Năm sinh");
+    lblDOB->setPosition("51.0%", tgui::bindTop(lblGender));
+    styleFormLabel(lblDOB);
+    rightPanel->add(lblDOB);
+    
+    auto editEmpDOB = tgui::EditBox::create();
+    editEmpDOB->setPosition("51.0%", tgui::bindBottom(lblDOB) + 8);
+    editEmpDOB->setSize("44.5%", 66);
+    editEmpDOB->setTextSize(20);
+    editEmpDOB->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    editEmpDOB->getRenderer()->setRoundedBorderRadius(10);
+    editEmpDOB->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    editEmpDOB->setDefaultText("Ví dụ: 2002");
+    rightPanel->add(editEmpDOB, "editEmpDOB");
+
+
+    // --- DÒNG 3 ---
+    auto lblPhone = tgui::Label::create("Số điện thoại");
+    lblPhone->setPosition("4.5%", tgui::bindBottom(editEmpDOB) + 44);
+    styleFormLabel(lblPhone);
+    rightPanel->add(lblPhone);
+    
+    auto editEmpPhone = tgui::EditBox::create();
+    editEmpPhone->setPosition("4.5%", tgui::bindBottom(lblPhone) + 8);
+    editEmpPhone->setSize("44.5%", 66);
+    editEmpPhone->setTextSize(20);
+    editEmpPhone->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    editEmpPhone->getRenderer()->setRoundedBorderRadius(10);
+    editEmpPhone->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    editEmpPhone->setDefaultText("Nhập số điện thoại");
+    rightPanel->add(editEmpPhone, "editEmpPhone");
+
+    auto lblRole = tgui::Label::create("Chức vụ");
+    lblRole->setPosition("51.0%", tgui::bindTop(lblPhone));
+    styleFormLabel(lblRole);
+    rightPanel->add(lblRole);
+    
+    auto comboEmpRole = tgui::ComboBox::create();
+    comboEmpRole->setPosition("51.0%", tgui::bindBottom(lblRole) + 8);
+    comboEmpRole->setSize("44.5%", 66);
+    comboEmpRole->setTextSize(20);
+    comboEmpRole->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    comboEmpRole->getRenderer()->setRoundedBorderRadius(10);
+    comboEmpRole->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    comboEmpRole->addItem("Quản lí", "1");
+    comboEmpRole->addItem("Nhân viên", "0");
+    comboEmpRole->setDefaultText("Chọn chức vụ");
+    rightPanel->add(comboEmpRole, "comboEmpRole");
+
+
+    // --- DÒNG 4 ---
+    auto lblSalary = tgui::Label::create("Lương theo giờ (VNĐ)");
+    lblSalary->setPosition("4.5%", tgui::bindBottom(editEmpPhone) + 44);
+    styleFormLabel(lblSalary);
+    rightPanel->add(lblSalary);
+    
+    auto editEmpSalary = tgui::EditBox::create();
+    editEmpSalary->setPosition("4.5%", tgui::bindBottom(lblSalary) + 8);
+    editEmpSalary->setSize("44.5%", 66);
+    editEmpSalary->setTextSize(20);
+    editEmpSalary->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    editEmpSalary->getRenderer()->setRoundedBorderRadius(10);
+    editEmpSalary->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    editEmpSalary->setDefaultText("Ví dụ: 25000");
+    rightPanel->add(editEmpSalary, "editEmpSalary");
+
+    auto lblShift = tgui::Label::create("Ca làm");
+    lblShift->setPosition("51.0%", tgui::bindTop(lblSalary));
+    styleFormLabel(lblShift);
+    rightPanel->add(lblShift);
+    
+    auto comboEmpShift = tgui::ComboBox::create();
+    comboEmpShift->setPosition("51.0%", tgui::bindBottom(lblShift) + 8);
+    comboEmpShift->setSize("44.5%", 66);
+    comboEmpShift->setTextSize(20);
+    comboEmpShift->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    comboEmpShift->getRenderer()->setRoundedBorderRadius(10);
+    comboEmpShift->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    comboEmpShift->addItem("Sáng", "Sáng");
+    comboEmpShift->addItem("Chiều", "Chiều");
+    comboEmpShift->addItem("Tối", "Tối");
+    comboEmpShift->addItem("Hành chính", "Hành chính");
+    comboEmpShift->setDefaultText("Chọn ca");
+    rightPanel->add(comboEmpShift, "comboEmpShift");
+
+
+    // --- DÒNG 5 ---
+    auto lblHire = tgui::Label::create("Ngày thuê");
+    lblHire->setPosition("4.5%", tgui::bindBottom(editEmpSalary) + 44);
+    styleFormLabel(lblHire);
+    rightPanel->add(lblHire);
+    
+    auto editEmpHireDate = tgui::EditBox::create();
+    editEmpHireDate->setPosition("4.5%", tgui::bindBottom(lblHire) + 8);
+    editEmpHireDate->setSize("44.5%", 66);
+    editEmpHireDate->setTextSize(20);
+    editEmpHireDate->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    editEmpHireDate->getRenderer()->setRoundedBorderRadius(10);
+    editEmpHireDate->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    editEmpHireDate->setDefaultText("dd/mm/yyyy");
+    rightPanel->add(editEmpHireDate, "editEmpHireDate");
+
+    auto lblStatus = tgui::Label::create("Trạng thái");
+    lblStatus->setPosition("51.0%", tgui::bindTop(lblHire));
+    styleFormLabel(lblStatus);
+    rightPanel->add(lblStatus);
+    
+    auto comboEmpStatus = tgui::ComboBox::create();
+    comboEmpStatus->setPosition("51.0%", tgui::bindBottom(lblStatus) + 8);
+    comboEmpStatus->setSize("44.5%", 66);
+    comboEmpStatus->setTextSize(20);
+    comboEmpStatus->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    comboEmpStatus->getRenderer()->setRoundedBorderRadius(10);
+    comboEmpStatus->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+    comboEmpStatus->addItem("Đang làm", "1");
+    comboEmpStatus->addItem("Đã nghỉ việc", "0");
+    comboEmpStatus->setSelectedItemById("1");
+    rightPanel->add(comboEmpStatus, "comboEmpStatus");
+
+
+    // --- CỤM NÚT THAO TÁC (Thêm mới, Cập nhật, Cho nghỉ việc) ---
+    auto btnAddEmp = tgui::Button::create("THÊM MỚI");
+    btnAddEmp->setPosition("4.5%", tgui::bindBottom(editEmpHireDate) + 60); 
+    btnAddEmp->setSize("29.0%", 66);
+    btnAddEmp->setTextSize(20);
+    btnAddEmp->getRenderer()->setBackgroundColor(tgui::Color(235, 230, 222));
+    btnAddEmp->getRenderer()->setTextColor(tgui::Color(120, 115, 110));
+    btnAddEmp->getRenderer()->setRoundedBorderRadius(10);
+    btnAddEmp->getRenderer()->setBorders(0);
+    btnAddEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    rightPanel->add(btnAddEmp, "btnAddEmp");
+
+    auto btnUpdateEmp = tgui::Button::create("CẬP NHẬT");
+    btnUpdateEmp->setPosition("50% - width/2", tgui::bindTop(btnAddEmp));
+    btnUpdateEmp->setSize("29.0%", 66);
+    btnUpdateEmp->setTextSize(20);
+    btnUpdateEmp->getRenderer()->setBackgroundColor(tgui::Color(235, 230, 222));
+    btnUpdateEmp->getRenderer()->setTextColor(tgui::Color(120, 115, 110));
+    btnUpdateEmp->getRenderer()->setRoundedBorderRadius(10);
+    btnUpdateEmp->getRenderer()->setBorders(0);
+    btnUpdateEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    rightPanel->add(btnUpdateEmp, "btnUpdateEmp");
+
+    auto btnDeleteEmp = tgui::Button::create("CHO NGHỈ VIỆC");
+    btnDeleteEmp->setPosition("95.5% - width", tgui::bindTop(btnAddEmp));
+    btnDeleteEmp->setSize("29.0%", 66);
+    btnDeleteEmp->setTextSize(20);
+    btnDeleteEmp->getRenderer()->setBackgroundColor(tgui::Color(235, 230, 222));
+    btnDeleteEmp->getRenderer()->setTextColor(tgui::Color(120, 115, 110));
+    btnDeleteEmp->getRenderer()->setRoundedBorderRadius(10);
+    btnDeleteEmp->getRenderer()->setBorders(0);
+    btnDeleteEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    rightPanel->add(btnDeleteEmp, "btnDeleteEmp");
+
+    // --- Nút Làm mới biểu mẫu ---
+    auto btnClearForm = tgui::Button::create("Làm mới biểu mẫu");
+    btnClearForm->setPosition("50% - width/2", tgui::bindBottom(btnAddEmp) + 36);
+    btnClearForm->setTextSize(20);
+    btnClearForm->getRenderer()->setBackgroundColor(tgui::Color::Transparent);
+    btnClearForm->getRenderer()->setTextColor(tgui::Color(160, 82, 45));
+    btnClearForm->getRenderer()->setBorders(0);
+    btnClearForm->getRenderer()->setFont("assets/fonts/BeVietnamPro-SemiBold.ttf");
+    rightPanel->add(btnClearForm, "btnClearForm");
+
+    auto refreshListView = [=, &app]() {
+        listEmp->removeAllItems();
+        string keyword = searchEmp->getText().toStdString();
+        string shiftFilter = filterShift->getSelectedItemId().toStdString();
+        string roleFilter = filterRole->getSelectedItemId().toStdString();
+
+        vector<Person*> filteredPersons = app.getPersonManager().searchPersons(keyword, shiftFilter, roleFilter);
+
+        for (Person* p : filteredPersons){
+            string roleStr = ((int)p->getAccount().getRole() == 1) ? "Quản lí" : "Nhân viên";
+            string statusStr = (p->getAccount().isActive()) ? "Đang làm" : "Đã nghỉ việc";
+
+            listEmp->addItem({p->getPersonID(), p->getFullName(), roleStr, p->getShift(), statusStr});
+        }
+    };
+
+    refreshListView();
+
+    btnSearch->onPress(refreshListView);
+    filterShift->onItemSelect(refreshListView);
+    filterRole->onItemSelect(refreshListView);
+
+    contentPanel->add(panelEmp);
 }
 
 // 3. HÀM MAIN CHÍNH (ENTRY POINT & EVENT LOOP)
