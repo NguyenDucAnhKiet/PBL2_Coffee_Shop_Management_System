@@ -46,5 +46,21 @@
         "phone": "0909090909",
         "salary": 25000.0,
         "shift": "Chiều"
+    },
+    {
+        "account": {
+            "active": true,
+            "password": "ql0202091998",
+            "role": 1,
+            "username": "adminql02"
+        },
+        "dob": "02/09/1998",
+        "fullName": "Nguyễn Văn Phúc",
+        "gender": "Nam",
+        "hireDate": "08/11/2026",
+        "personID": "QL02",
+        "phone": "0355566677",
+        "salary": 50000.0,
+        "shift": "Hành chính"
     }
 ]

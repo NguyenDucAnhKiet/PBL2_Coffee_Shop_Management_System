@@ -23,12 +23,106 @@ void loadLoginScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app)
 void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app);
 void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app);
 void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app);
-void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app);
+void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* gui);
 
 // =========================================================================
 // 1. MÀN HÌNH ĐĂNG NHẬP (LOGIN SCREEN)
 // Vai trò: Hiển thị form nhỏ gọn ở giữa màn hình, xác thực tài khoản qua Application
 // =========================================================================
+
+void showConfirmDialog(tgui::Gui* gui, const tgui::String& title, const tgui::String& message, const tgui::String& iconText, tgui::Color iconBgColor, tgui::Panel::Ptr detailPanel, std::function<void()> onYes) {
+    auto overlay = tgui::Panel::create({"100%", "100%"});
+    overlay->getRenderer()->setBackgroundColor(tgui::Color(0, 0, 0, 150));
+    gui->add(overlay);
+
+    auto dialog = tgui::Panel::create({"780", "540"});
+    dialog->setPosition("50% - width/2", "50% - height/2");
+    dialog->getRenderer()->setBackgroundColor(tgui::Color::White);
+    dialog->getRenderer()->setRoundedBorderRadius(15);
+    overlay->add(dialog);
+
+    auto lblTitle = tgui::Label::create(title);
+    lblTitle->setPosition(30, 20);
+    lblTitle->setTextSize(24);
+    lblTitle->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    dialog->add(lblTitle);
+
+    auto btnClose = tgui::Button::create("x");
+    btnClose->setPosition("100% - 50", 15);
+    btnClose->setSize(35, 35);
+    btnClose->setTextSize(24);
+    btnClose->getRenderer()->setBackgroundColor(tgui::Color::Transparent);
+    btnClose->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+    btnClose->getRenderer()->setBorders(0);
+    btnClose->onPress([gui, overlay]() { gui->remove(overlay); });
+    dialog->add(btnClose);
+
+    auto iconLabel = tgui::Button::create(iconText);
+    iconLabel->setPosition(30, 80);
+    iconLabel->setSize(60, 60);
+    iconLabel->setTextSize(30);
+    iconLabel->getRenderer()->setBackgroundColor(iconBgColor);
+    iconLabel->getRenderer()->setTextColor(tgui::Color::White);
+    iconLabel->getRenderer()->setRoundedBorderRadius(30);
+    iconLabel->getRenderer()->setBorders(0);
+    iconLabel->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    iconLabel->setEnabled(false);
+    dialog->add(iconLabel);
+
+    auto lblMessage = tgui::Label::create(message);
+    lblMessage->setPosition(110, tgui::bindTop(iconLabel) + (tgui::bindHeight(iconLabel) - tgui::bindHeight(lblMessage)) / 2);
+    lblMessage->setMaximumTextWidth(630);
+    lblMessage->setTextSize(20);
+    lblMessage->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    dialog->add(lblMessage);
+
+    if (detailPanel) {
+        detailPanel->setPosition(30, 170);
+        
+        // Lấy chiều cao thực tế bằng cách truy xuất kích thước y của detailPanel
+        float panelHeight = detailPanel->getSize().y;
+        
+        // Nếu chiều cao chưa được set (bằng 0), ta gán mặc định là 240
+        if (panelHeight <= 0) {
+            panelHeight = 240;
+        }
+        
+        detailPanel->setSize("100% - 60", panelHeight);
+        detailPanel->getRenderer()->setBackgroundColor(tgui::Color(250, 245, 240));
+        detailPanel->getRenderer()->setRoundedBorderRadius(8);
+        dialog->add(detailPanel);
+        
+        dialog->setSize(780, 170 + panelHeight + 110);
+    }
+
+    auto btnYes = tgui::Button::create("Có");
+    btnYes->setSize(150, 50);
+    btnYes->setPosition("100% - 340", "100% - 90");
+    btnYes->getRenderer()->setBackgroundColor(tgui::Color(160, 82, 45));
+    btnYes->getRenderer()->setTextColor(tgui::Color::White);
+    btnYes->getRenderer()->setRoundedBorderRadius(10);
+    btnYes->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    btnYes->setTextSize(18);
+    btnYes->onPress([gui, overlay, onYes]() {
+        onYes();
+        gui->remove(overlay);
+    });
+    dialog->add(btnYes);
+
+    auto btnNo = tgui::Button::create("Không");
+    btnNo->setSize(150, 50);
+    btnNo->setPosition("100% - 170", "100% - 90");
+    btnNo->getRenderer()->setBackgroundColor(tgui::Color::White);
+    btnNo->getRenderer()->setTextColor(tgui::Color(20, 20, 20));
+    btnNo->getRenderer()->setBorders(1);
+    btnNo->getRenderer()->setBorderColor(tgui::Color(200, 200, 200));
+    btnNo->getRenderer()->setRoundedBorderRadius(10);
+    btnNo->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+    btnNo->setTextSize(18);
+    btnNo->onPress([gui, overlay]() { gui->remove(overlay); });
+    dialog->add(btnNo);
+}
+
 void loadLoginScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app) {
     gui.removeAllWidgets(); // Xóa sạch giao diện cũ (nếu có) khi quay về từ màn hình khác
 
@@ -181,7 +275,9 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
     auto menuButtons = std::make_shared<std::vector<tgui::Button::Ptr>>(); // Mảng lưu các nút để xử lý đổi màu khi active
 
     // HÀM SWITCH TAB: Xử lý đổi màu nút đang chọn và thay đổi nội dung trang bên dưới
-    auto switchTab = [contentPanel, menuButtons, &app](int index) {
+    tgui::Gui* pGui = &gui;
+    
+    auto switchTab = [contentPanel, menuButtons, &app, pGui](int index) {
         // 1. Đổi màu trạng thái Active (Nút nào được bấm sẽ đậm màu hơn các nút còn lại)
         for (size_t i = 0; i < menuButtons->size(); ++i) {
             if (i == index) {
@@ -199,7 +295,7 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
             // Load giao diện Trang Chủ
             loadHomeView(contentPanel, app);
         } else if (index == 3) {
-            loadPersonView(contentPanel, app);
+            loadPersonView(contentPanel, app, pGui);
         } else if (index == 4) {
             loadMenuView(contentPanel, app);
         } else {
@@ -926,7 +1022,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     filterCombo->onItemSelect(performSearch);
 }
 
-void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
+void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* gui) {
     contentPanel->removeAllWidgets();
 
     auto panelEmp = tgui::Panel::create();
@@ -1073,8 +1169,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     editEmpID->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
     editEmpID->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
     editEmpID->getRenderer()->setRoundedBorderRadius(10);
-    editEmpID->setReadOnly(true); 
-    editEmpID->getRenderer()->setBackgroundColor(tgui::Color(242, 236, 230));
+    editEmpID->setDefaultText("Ví dụ: QL01");
     editEmpID->getRenderer()->setTextColor(tgui::Color(80, 70, 60));
     rightPanel->add(editEmpID, "editEmpID");
 
@@ -1118,19 +1213,21 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     radioFemale->setPosition("4.5% + 110", tgui::bindTop(radioMale));
     rightPanel->add(radioFemale, "radioFemale");
 
-    auto lblDOB = tgui::Label::create("Năm sinh");
+    auto lblDOB = tgui::Label::create("Ngày sinh");
     lblDOB->setPosition("51.0%", tgui::bindTop(lblGender));
     styleFormLabel(lblDOB);
     rightPanel->add(lblDOB);
     
     auto editEmpDOB = tgui::EditBox::create();
+    editEmpDOB->setInputValidator("[0-9/]*");
+    editEmpDOB->setMaximumCharacters(10);
     editEmpDOB->setPosition("51.0%", tgui::bindBottom(lblDOB) + 8);
     editEmpDOB->setSize("44.5%", 66);
     editEmpDOB->setTextSize(20);
     editEmpDOB->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
     editEmpDOB->getRenderer()->setRoundedBorderRadius(10);
     editEmpDOB->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
-    editEmpDOB->setDefaultText("Ví dụ: 2002");
+    editEmpDOB->setDefaultText("dd/mm/yyyy");
     rightPanel->add(editEmpDOB, "editEmpDOB");
 
 
@@ -1141,6 +1238,8 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     rightPanel->add(lblPhone);
     
     auto editEmpPhone = tgui::EditBox::create();
+    editEmpPhone->setMaximumCharacters(10);
+    editEmpPhone->setInputValidator("[0-9]*");
     editEmpPhone->setPosition("4.5%", tgui::bindBottom(lblPhone) + 8);
     editEmpPhone->setSize("44.5%", 66);
     editEmpPhone->setTextSize(20);
@@ -1175,6 +1274,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     rightPanel->add(lblSalary);
     
     auto editEmpSalary = tgui::EditBox::create();
+    editEmpSalary->setInputValidator("[0-9]*");
     editEmpSalary->setPosition("4.5%", tgui::bindBottom(lblSalary) + 8);
     editEmpSalary->setSize("44.5%", 66);
     editEmpSalary->setTextSize(20);
@@ -1211,6 +1311,8 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     rightPanel->add(lblHire);
     
     auto editEmpHireDate = tgui::EditBox::create();
+    editEmpHireDate->setInputValidator("[0-9/]*");
+    editEmpHireDate->setMaximumCharacters(10);
     editEmpHireDate->setPosition("4.5%", tgui::bindBottom(lblHire) + 8);
     editEmpHireDate->setSize("44.5%", 66);
     editEmpHireDate->setTextSize(20);
@@ -1243,8 +1345,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnAddEmp->setPosition("4.5%", tgui::bindBottom(editEmpHireDate) + 60); 
     btnAddEmp->setSize("29.0%", 66);
     btnAddEmp->setTextSize(20);
-    btnAddEmp->getRenderer()->setBackgroundColor(tgui::Color(235, 230, 222));
-    btnAddEmp->getRenderer()->setTextColor(tgui::Color(120, 115, 110));
     btnAddEmp->getRenderer()->setRoundedBorderRadius(10);
     btnAddEmp->getRenderer()->setBorders(0);
     btnAddEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
@@ -1254,8 +1354,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnUpdateEmp->setPosition("50% - width/2", tgui::bindTop(btnAddEmp));
     btnUpdateEmp->setSize("29.0%", 66);
     btnUpdateEmp->setTextSize(20);
-    btnUpdateEmp->getRenderer()->setBackgroundColor(tgui::Color(235, 230, 222));
-    btnUpdateEmp->getRenderer()->setTextColor(tgui::Color(120, 115, 110));
     btnUpdateEmp->getRenderer()->setRoundedBorderRadius(10);
     btnUpdateEmp->getRenderer()->setBorders(0);
     btnUpdateEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
@@ -1265,12 +1363,120 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnDeleteEmp->setPosition("95.5% - width", tgui::bindTop(btnAddEmp));
     btnDeleteEmp->setSize("29.0%", 66);
     btnDeleteEmp->setTextSize(20);
-    btnDeleteEmp->getRenderer()->setBackgroundColor(tgui::Color(235, 230, 222));
-    btnDeleteEmp->getRenderer()->setTextColor(tgui::Color(120, 115, 110));
     btnDeleteEmp->getRenderer()->setRoundedBorderRadius(10);
     btnDeleteEmp->getRenderer()->setBorders(0);
     btnDeleteEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
     rightPanel->add(btnDeleteEmp, "btnDeleteEmp");
+
+    // Hàm Helper tự động đổi màu và trạng thái nút
+    auto setButtonState = [](tgui::Button::Ptr btn, bool isActive, tgui::Color primaryBg) {
+        btn->setEnabled(isActive);
+        if (isActive) {
+            btn->getRenderer()->setBackgroundColor(primaryBg);
+            btn->getRenderer()->setTextColor(tgui::Color::White);
+        } else {
+            btn->getRenderer()->setBackgroundColorDisabled(tgui::Color(235, 230, 222)); // Màu nền khi Disabled
+            btn->getRenderer()->setTextColorDisabled(tgui::Color(120, 115, 110)); // Màu chữ khi Disabled
+        }
+    };
+
+    // Mặc định khi vừa vào Form: Khóa cả 3 nút
+    setButtonState(btnAddEmp, false, tgui::Color(31, 107, 58));
+    setButtonState(btnUpdateEmp, false, tgui::Color(47, 95, 138));
+    setButtonState(btnDeleteEmp, false, tgui::Color(163, 45, 45));
+
+    auto formatDateInput = [](tgui::String text, tgui::EditBox::Ptr editBox) {
+        std::string s = text.toStdString();
+        std::string raw = "";
+        for (char c : s) {
+            if (c >= '0' && c <= '9') raw += c;
+        }
+        
+        std::string formatted = "";
+        for (size_t i = 0; i < raw.length(); ++i) {
+            if (i == 2 || i == 4) formatted += "/";
+            formatted += raw[i];
+        }
+        
+        if (formatted.length() > 10) formatted = formatted.substr(0, 10);
+        
+        if (formatted != s) {
+            editBox->setText(formatted);
+            editBox->setCaretPosition(formatted.length());
+        }
+    };
+
+    comboEmpRole->onItemSelect([=]() {
+        if (editEmpID->isReadOnly()) return; 
+
+        string prefix = (comboEmpRole->getSelectedItemId() == "1") ? "QL" : "NV";
+        
+        string currentText = editEmpID->getText().toStdString();
+        string digits = "";
+        for (char c : currentText) {
+            if (c >= '0' && c <= '9') digits += c;
+        }
+        
+        editEmpID->setText(prefix + digits);
+    });
+
+    editEmpID->onTextChange([=](tgui::String text) {
+        if (editEmpID->isReadOnly()) return;
+        
+        string s = text.toStdString();
+        string digits = "";
+        for (char c : s) {
+            if (c >= '0' && c <= '9') digits += c;
+        }
+
+        if (comboEmpRole->getSelectedItemIndex() == -1) {
+            if (digits != s) {
+                editEmpID->setText(digits);
+                editEmpID->setCaretPosition(digits.length());
+            }
+            return;
+        }
+        
+        string prefix = (comboEmpRole->getSelectedItemId() == "1") ? "QL" : "NV";
+        string formatted = prefix + digits;
+        
+        if (formatted != s) {
+            editEmpID->setText(formatted);
+            editEmpID->setCaretPosition(formatted.length());
+        }
+    });
+
+    editEmpDOB->onTextChange([=](tgui::String text) { formatDateInput(text, editEmpDOB); });
+    editEmpHireDate->onTextChange([=](tgui::String text) { formatDateInput(text, editEmpHireDate); }); 
+
+    auto checkFormValid = [=]() {
+        // Nếu form đang ở chế độ Cập nhật (Mã NV bị khóa) thì không mở nút Thêm Mới
+        if (editEmpID->isReadOnly()) return; 
+
+        bool isFull = !editEmpID->getText().empty() &&
+                      !editEmpName->getText().empty() &&
+                      (radioMale->isChecked() || radioFemale->isChecked()) &&
+                      !editEmpDOB->getText().empty() &&
+                      !editEmpPhone->getText().empty() &&
+                      comboEmpRole->getSelectedItemIndex() != -1 &&
+                      !editEmpSalary->getText().empty() &&
+                      comboEmpShift->getSelectedItemIndex() != -1 &&
+                      !editEmpHireDate->getText().empty();
+
+        setButtonState(btnAddEmp, isFull, tgui::Color(31, 107, 58));
+    };
+
+    // Gắn "mắt thần" vào tất cả các ô nhập liệu
+    editEmpID->onTextChange(checkFormValid);
+    editEmpName->onTextChange(checkFormValid);
+    editEmpDOB->onTextChange(checkFormValid);
+    editEmpPhone->onTextChange(checkFormValid);
+    editEmpSalary->onTextChange(checkFormValid);
+    editEmpHireDate->onTextChange(checkFormValid);
+    radioMale->onCheck(checkFormValid);
+    radioFemale->onCheck(checkFormValid);
+    comboEmpRole->onItemSelect(checkFormValid);
+    comboEmpShift->onItemSelect(checkFormValid);
 
     // --- Nút Làm mới biểu mẫu ---
     auto btnClearForm = tgui::Button::create("Làm mới biểu mẫu");
@@ -1280,6 +1486,37 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnClearForm->getRenderer()->setTextColor(tgui::Color(160, 82, 45));
     btnClearForm->getRenderer()->setBorders(0);
     btnClearForm->getRenderer()->setFont("assets/fonts/BeVietnamPro-SemiBold.ttf");
+    btnClearForm->onPress([=]() {
+    editEmpID->setReadOnly(false);
+    editEmpName->setReadOnly(false);
+    radioMale->setEnabled(true);
+    radioFemale->setEnabled(true);
+    editEmpDOB->setReadOnly(false);
+    editEmpHireDate->setReadOnly(false);
+
+    tgui::Color defaultBg = editEmpPhone->getRenderer()->getBackgroundColor();
+    editEmpID->getRenderer()->setBackgroundColor(defaultBg);
+    editEmpName->getRenderer()->setBackgroundColor(defaultBg);
+    editEmpDOB->getRenderer()->setBackgroundColor(defaultBg);
+    editEmpHireDate->getRenderer()->setBackgroundColor(defaultBg);
+
+    comboEmpRole->deselectItem();
+    
+    editEmpID->setText("");
+    editEmpName->setText("");
+    radioMale->setChecked(false);
+    radioFemale->setChecked(false);
+    editEmpDOB->setText("");
+    editEmpPhone->setText("");
+    editEmpSalary->setText("");
+    comboEmpShift->deselectItem();
+    editEmpHireDate->setText("");
+    comboEmpStatus->setSelectedItemById("1");
+    
+    setButtonState(btnAddEmp, false, tgui::Color(31, 107, 58));
+    setButtonState(btnUpdateEmp, false, tgui::Color(47, 95, 138));
+    setButtonState(btnDeleteEmp, false, tgui::Color(163, 45, 45));
+});
     rightPanel->add(btnClearForm, "btnClearForm");
 
     auto refreshListView = [=, &app]() {
@@ -1304,7 +1541,327 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app) {
     filterShift->onItemSelect(refreshListView);
     filterRole->onItemSelect(refreshListView);
 
+    btnAddEmp->onPress([=, &app]() {
+        if (!editEmpName || !radioMale || !radioFemale || !editEmpDOB || !editEmpPhone || !comboEmpRole || !editEmpSalary || !comboEmpShift || !editEmpHireDate || !btnClearForm) {
+            return;
+        }
+
+        string name = editEmpName->getText().toStdString();
+        string gender = radioMale->isChecked() ? "Nam" : (radioFemale->isChecked() ? "Nữ" : "");
+        
+        int dob = 0;
+        if (!editEmpDOB->getText().empty()) {
+            try { 
+                dob = stoi(editEmpDOB->getText().toStdString()); 
+            } catch (...) { 
+                dob = 0; 
+            }
+        }
+        
+        string phone = editEmpPhone->getText().toStdString();
+        int role = (comboEmpRole->getSelectedItemId() == "1") ? 1 : 0;
+        
+        int salary = 0;
+        if (!editEmpSalary->getText().empty()) {
+            try { 
+                salary = stoi(editEmpSalary->getText().toStdString()); 
+            } catch (...) { 
+                salary = 0; 
+            }
+        }
+        
+        string shift = comboEmpShift->getSelectedItemId().toStdString();
+        string hireDate = editEmpHireDate->getText().toStdString();
+        
+        if (name.empty() || gender.empty() || phone.empty() || shift.empty()) {
+            return;
+        }
+
+        string empID = editEmpID->getText().toStdString();
+        string roleStr = (role == 1) ? "Quản lí" : "Nhân viên";
+        string salaryStr = to_string(salary) + " VNĐ";
+
+        auto detailPanel = tgui::Panel::create();
+        
+        auto addInfoRow = [&](tgui::String title, tgui::String value, int y) {
+            auto lblTitle = tgui::Label::create(title);
+            lblTitle->setPosition(20, y);
+            lblTitle->setTextSize(20);
+            lblTitle->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+            detailPanel->add(lblTitle);
+            
+            auto lblValue = tgui::Label::create(value);
+            lblValue->setPosition("100% - width - 20", y);
+            lblValue->setTextSize(20);
+            lblValue->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+            detailPanel->add(lblValue);
+        };
+
+        addInfoRow("Mã NV", empID, 20);
+        addInfoRow("Họ tên", name, 65);
+        addInfoRow("Chức vụ", roleStr, 110);
+        addInfoRow("Ca làm", shift, 155);
+        addInfoRow("Lương theo giờ", salaryStr, 200);
+
+        showConfirmDialog(
+            gui, 
+            "Xác nhận thêm nhân viên", 
+            "Bạn có chắc chắn muốn thêm nhân viên mới này vào hệ thống không?", 
+            "?", 
+            tgui::Color(160, 82, 45), 
+            detailPanel, 
+            [=, &app]() {
+                string lowerEmpID = empID;
+                for (char& c : lowerEmpID) {
+                    c = tolower(c);
+                }
+                
+                string username = (role == 1 ? "admin" : "staff") + lowerEmpID;
+                
+                string rawDOB = "";
+                string dobStr = editEmpDOB->getText().toStdString();
+                for (char c : dobStr) {
+                    if (c != '/') rawDOB += c;
+                }
+                string password = lowerEmpID + rawDOB;
+
+                Account newAcc(username, password, true, (Role)role);
+                
+                string phoneStr = editEmpPhone->getText().toStdString();
+                string hireDateStr = editEmpHireDate->getText().toStdString();
+                
+                Person newEmp(empID, name, phoneStr, salary, hireDateStr, newAcc, gender, shift, dobStr);
+                
+                app.getPersonManager().addPerson(newEmp);
+                
+                refreshListView();
+
+                btnClearForm->onPress.emit(btnClearForm.get(), "");
+            }
+        );
+    });
+
+    btnUpdateEmp->onPress([=, &app]() {
+        string empID = editEmpID->getText().toStdString();
+        if (empID.empty()) return;
+
+        string newPhone = editEmpPhone->getText().toStdString();
+        int role = (comboEmpRole->getSelectedItemId() == "1") ? 1 : 0;
+        string shift = comboEmpShift->getSelectedItemId().toStdString();
+        
+        int newSalary = 0;
+        if (!editEmpSalary->getText().empty()) {
+            try { newSalary = stoi(editEmpSalary->getText().toStdString()); } 
+            catch (...) { newSalary = 0; }
+        }
+
+        // Lấy thông tin cũ từ PersonManager
+        Person* oldP = app.getPersonManager().findPersonByID(empID);
+        if (!oldP) return;
+        
+        string oldPhone = oldP->getPhone();
+        string oldRole = ((int)oldP->getAccount().getRole() == 1) ? "Quản lí" : "Nhân viên";
+        string oldShift = oldP->getShift();
+        int oldSalary = oldP->getSalary();
+        string oldName = oldP->getFullName();
+
+        string newRole = (role == 1) ? "Quản lí" : "Nhân viên";
+
+        auto detailPanel = tgui::Panel::create();
+        
+        int currentY = 15;
+        
+        // Hàm hiển thị một dòng thông tin (cũ -> mới)
+        auto addChangeRow = [&](tgui::String title, tgui::String oldVal, tgui::String newVal) {
+            auto lblTitle = tgui::Label::create(title);
+            lblTitle->setPosition(20, currentY);
+            lblTitle->setTextSize(18);
+            lblTitle->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+            detailPanel->add(lblTitle);
+            
+            if (oldVal == newVal) {
+                auto lblVal = tgui::Label::create(oldVal);
+                lblVal->setPosition("100% - width - 20", currentY);
+                lblVal->setTextSize(18);
+                lblVal->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+                detailPanel->add(lblVal);
+            } else {
+                auto lblNewVal = tgui::Label::create(newVal);
+                lblNewVal->setPosition("100% - width - 20", currentY);
+                lblNewVal->setTextSize(18);
+                lblNewVal->getRenderer()->setTextColor(tgui::Color(31, 107, 58)); // Xanh lá của nút Thêm
+                lblNewVal->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+                detailPanel->add(lblNewVal);
+                
+                auto lblArrow = tgui::Label::create(u8"➜");
+                lblArrow->setPosition(tgui::bindLeft(lblNewVal) - tgui::bindWidth(lblArrow) - 10, currentY);
+                lblArrow->setTextSize(18);
+                lblArrow->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+                detailPanel->add(lblArrow);
+                
+                auto lblOldVal = tgui::Label::create(oldVal);
+                lblOldVal->setPosition(tgui::bindLeft(lblArrow) - tgui::bindWidth(lblOldVal) - 10, currentY);
+                lblOldVal->setTextSize(18);
+                lblOldVal->getRenderer()->setTextColor(tgui::Color(160, 160, 160));
+                detailPanel->add(lblOldVal);
+            }
+            currentY += 45;
+        };
+
+        // Luôn hiển thị dòng Nhân viên (không đổi)
+        auto lblTitle = tgui::Label::create("Nhân viên");
+        lblTitle->setPosition(20, currentY);
+        lblTitle->setTextSize(18);
+        lblTitle->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+        detailPanel->add(lblTitle);
+        
+        auto lblEmpInfo = tgui::Label::create(empID + " - " + oldName);
+        lblEmpInfo->setPosition("100% - width - 20", currentY);
+        lblEmpInfo->setTextSize(18);
+        lblEmpInfo->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+        detailPanel->add(lblEmpInfo);
+        currentY += 45;
+
+        // Biến đếm số lượng thay đổi
+        int changesCount = 0;
+
+        if (oldPhone != newPhone) {
+            addChangeRow("Số điện thoại", oldPhone, newPhone);
+            changesCount++;
+        }
+        if (oldRole != newRole) {
+            addChangeRow("Chức vụ", oldRole, newRole);
+            changesCount++;
+        }
+        if (oldSalary != newSalary) {
+            addChangeRow("Lương theo giờ", to_string(oldSalary) + " VND", to_string(newSalary) + " VND");
+            changesCount++;
+        }
+        if (oldShift != shift) {
+            addChangeRow("Ca làm", oldShift, shift);
+            changesCount++;
+        }
+
+        // Nếu có thay đổi nhưng không phải thay đổi tất cả 4 mục
+        if (changesCount > 0 && changesCount < 4) {
+            auto lblNotice = tgui::Label::create("Các thông tin còn lại không thay đổi.");
+            lblNotice->setPosition(20, currentY);
+            lblNotice->setTextSize(18);
+            lblNotice->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+            detailPanel->add(lblNotice);
+            currentY += 45;
+        }
+
+        // Lưu trữ chiều cao thực tế để dùng ở Bước 2
+        detailPanel->setSize(0, currentY);
+
+        showConfirmDialog(
+            gui, 
+            "Xác nhận cập nhật thông tin", 
+            "Bạn có chắc chắn muốn cập nhật thông tin mới cho nhân viên này không?", 
+            "i", 
+            tgui::Color(0, 102, 204), 
+            detailPanel, 
+            [=, &app]() {
+                app.getPersonManager().updatePersonInfo(empID, newPhone, newSalary, (Role)role, shift);
+                btnClearForm->onPress.emit(btnClearForm.get(), "");
+            }
+        );
+    });
+
+    btnDeleteEmp->onPress([=, &app]() {
+        string empID = editEmpID->getText().toStdString();
+        string name = editEmpName->getText().toStdString();
+        if (empID.empty()) return;
+
+        auto detailPanel = tgui::Panel::create();
+        
+        auto addInfoRow = [&](tgui::String title, tgui::String value, int y) {
+            auto lblTitle = tgui::Label::create(title);
+            lblTitle->setPosition(20, y);
+            lblTitle->setTextSize(20);
+            lblTitle->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
+            detailPanel->add(lblTitle);
+            
+            auto lblValue = tgui::Label::create(value);
+            lblValue->setPosition("100% - width - 20", y);
+            lblValue->setTextSize(20);
+            lblValue->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+            detailPanel->add(lblValue);
+        };
+
+        addInfoRow("Mã NV", empID, 20);
+        addInfoRow("Họ tên", name, 65);
+        detailPanel->setSize(0, 110);
+
+        showConfirmDialog(
+            gui, 
+            "Xác nhận cho nghỉ việc", 
+            "Bạn có chắc chắn muốn cho nhân viên này nghỉ việc không?", 
+            "X", 
+            tgui::Color(204, 0, 0), 
+            detailPanel, 
+            [=, &app]() {
+                app.getPersonManager().disablePerson(empID);
+                btnClearForm->onPress.emit(btnClearForm.get(), "");
+            }
+        );
+    });
+
+    listEmp->onItemSelect([=, &app](int index) {
+        if (index < 0) return;
+
+        editEmpID->setReadOnly(true);
+        editEmpName->setReadOnly(true);
+        radioMale->setEnabled(false);
+        radioFemale->setEnabled(false);
+        editEmpDOB->setReadOnly(true);
+        editEmpHireDate->setReadOnly(true);
+
+        editEmpID->getRenderer()->setBackgroundColor(tgui::Color(242, 236, 230));
+        editEmpName->getRenderer()->setBackgroundColor(tgui::Color(242, 236, 230));
+        editEmpDOB->getRenderer()->setBackgroundColor(tgui::Color(242, 236, 230));
+        editEmpHireDate->getRenderer()->setBackgroundColor(tgui::Color(242, 236, 230));
+
+        string selectedID = listEmp->getItemCell(index, 0).toStdString();
+        Person* p = app.getPersonManager().findPersonByID(selectedID);
+        
+        if (p) {
+            editEmpID->setText(p->getPersonID());
+            editEmpName->setText(p->getFullName());
+            
+            if (p->getGender() == "Nam") {
+                radioMale->setChecked(true);
+            } else if (p->getGender() == "Nữ") {
+                radioFemale->setChecked(true);
+            } else {
+                radioMale->setChecked(false);
+                radioFemale->setChecked(false);
+            }
+            
+            editEmpDOB->setText(p->getDob());
+            editEmpPhone->setText(p->getPhone());
+            
+            comboEmpRole->setSelectedItemById(to_string((int)p->getAccount().getRole()));
+            editEmpSalary->setText(to_string((int)p->getSalary()));
+            comboEmpShift->setSelectedItemById(p->getShift());
+            editEmpHireDate->setText(p->getHireDate());
+            
+            if (p->getAccount().isActive()) {
+                comboEmpStatus->setSelectedItemById("1");
+            } else {
+                comboEmpStatus->setSelectedItemById("0");
+            }
+        }
+        // Khóa Thêm Mới, Mở Cập nhật & Nghỉ việc
+        setButtonState(btnAddEmp, false, tgui::Color(31, 107, 58));
+        setButtonState(btnUpdateEmp, true, tgui::Color(47, 95, 138));
+        setButtonState(btnDeleteEmp, true, tgui::Color(163, 45, 45));
+    });
+
     contentPanel->add(panelEmp);
+
+
 }
 
 // 3. HÀM MAIN CHÍNH (ENTRY POINT & EVENT LOOP)
