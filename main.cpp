@@ -3,11 +3,9 @@
 #include <TGUI/Backend/SFML-Graphics.hpp>
 #include <iostream>
 
-
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-// Nhúng lớp Application trung tâm quản lý toàn bộ Backend và CurrentUser
 #include "Application.h"
 
 const tgui::Color COL_FRAME_BORDER(227, 217, 204);
@@ -24,11 +22,6 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
 void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app);
 void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app);
 void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* gui);
-
-// =========================================================================
-// 1. MÀN HÌNH ĐĂNG NHẬP (LOGIN SCREEN)
-// Vai trò: Hiển thị form nhỏ gọn ở giữa màn hình, xác thực tài khoản qua Application
-// =========================================================================
 
 void showConfirmDialog(tgui::Gui* gui, const tgui::String& title, const tgui::String& message, const tgui::String& iconText, tgui::Color iconBgColor, tgui::Panel::Ptr detailPanel, std::function<void()> onYes) {
     auto overlay = tgui::Panel::create({"100%", "100%"});
@@ -79,13 +72,8 @@ void showConfirmDialog(tgui::Gui* gui, const tgui::String& title, const tgui::St
     if (detailPanel) {
         detailPanel->setPosition(30, 170);
         
-        // Lấy chiều cao thực tế bằng cách truy xuất kích thước y của detailPanel
         float panelHeight = detailPanel->getSize().y;
-        
-        // Nếu chiều cao chưa được set (bằng 0), ta gán mặc định là 240
-        if (panelHeight <= 0) {
-            panelHeight = 240;
-        }
+        if (panelHeight <= 0) panelHeight = 240;
         
         detailPanel->setSize("100% - 60", panelHeight);
         detailPanel->getRenderer()->setBackgroundColor(tgui::Color(250, 245, 240));
@@ -124,12 +112,12 @@ void showConfirmDialog(tgui::Gui* gui, const tgui::String& title, const tgui::St
 }
 
 void loadLoginScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app) {
-    gui.removeAllWidgets(); // Xóa sạch giao diện cũ (nếu có) khi quay về từ màn hình khác
+    gui.removeAllWidgets();
 
     // --- Cấu hình kích thước cửa sổ cho màn hình Login ---
-    window.setSize(sf::Vector2u(800, 600)); // Thu nhỏ khung hình
+    window.setSize(sf::Vector2u(800, 600));
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-    window.setPosition(sf::Vector2i((desktop.width - 800) / 2, (desktop.height - 600) / 2)); // Canh giữa màn hình laptop
+    window.setPosition(sf::Vector2i((desktop.width - 800) / 2, (desktop.height - 600) / 2));
     window.setView(sf::View(sf::FloatRect(0, 0, 800, 600))); 
 
     // --- Tiêu đề form ---
@@ -170,45 +158,31 @@ void loadLoginScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app)
         string user = editUsername->getText().toStdString();
         string pass = editPassword->getText().toStdString();
 
-        // Gọi hàm login thông qua class Application quản lý phiên làm việc
         if (app.login(user, pass)) {
-            // Đăng nhập thành công -> Chuyển sang màn hình Dashboard chính
             loadDashboardScreen(gui, window, app); 
         } else {
-            // Đăng nhập thất bại -> Báo lỗi màu đỏ
             labelError->setText("Sai tai khoan, mat khau hoac tai khoan bi khoa!");
         }
     });
 }
 
-
-// =========================================================================
-// 2. MÀN HÌNH QUẢN LÝ CHÍNH (DASHBOARD SCREEN & ROUTING)
-// Vai trò: Phóng to toàn màn hình, chia giao diện thành Header, Menu Ngang và Content
-// =========================================================================
 void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app) {
-    gui.removeAllWidgets(); // Xóa sạch giao diện Login trước đó
-    Person* currentUser = app.getCurrentUser(); // Lấy thông tin nhân viên đang đăng nhập
+    gui.removeAllWidgets();
+    Person* currentUser = app.getCurrentUser();
 
-    // --- Tự động phóng to toàn màn hình (Full-screen trừ Taskbar của Windows) ---
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     int newWidth = desktop.width;
     int newHeight = desktop.height - 80;
 
     window.setSize(sf::Vector2u(newWidth, newHeight));
-    window.setPosition(sf::Vector2i(0, 0)); // Đưa cửa sổ về góc trên cùng bên trái
+    window.setPosition(sf::Vector2i(0, 0));
     window.setView(sf::View(sf::FloatRect(0, 0, newWidth, newHeight)));
 
-
-    // -----------------------------------------------------
-    // KHU VỰC 2.1: HEADER (Hiển thị thông tin người dùng ở góc trên)
-    // -----------------------------------------------------
     auto headerPicture = tgui::Picture::create("assets/images/header.png");
-    headerPicture->setSize({"100%", "18%"}); //Sửa chiều dọc của phần header
+    headerPicture->setSize({"100%", "18%"});
     headerPicture->setPosition(0, 0);
     gui.add(headerPicture);
 
-    // Phân quyền hiển thị chức vụ dựa trên Enum Role (1: Quản lý, Khác: Nhân viên)
     int roleValue = (int)currentUser->getAccount().getRole();
     string roleName = (roleValue == 1) ? "Quản Lý" : "Nhân Viên";
 
@@ -251,30 +225,24 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
     userCard->add(labelUserName);
     userCard->add(labelUserRole);
     
-    // -----------------------------------------------------
-    // KHU VỰC 2.2: THANH MENU NGANG VÀ VÙNG CONTENT (Routing System)
-    // -----------------------------------------------------
     auto menuBar = tgui::Panel::create({"100%", "6%"});
     menuBar->setPosition(0, "18%"); //Sửa chiều dọc
     menuBar->getRenderer()->setBackgroundColor(tgui::Color(160, 140, 120)); 
     gui.add(menuBar);
 
-    // Khung chứa nội dung thay đổi theo từng Tab bấm vào
     auto contentPanel = tgui::Panel::create({"100%", "76%"});
     contentPanel->setPosition(0, "24%"); //Sửa chiều dọc
     contentPanel->getRenderer()->setBackgroundColor(tgui::Color(245, 240, 230)); 
     gui.add(contentPanel);
 
-    // Danh sách các nút chức năng theo đúng yêu cầu bắt buộc
     vector<string> menuItems = {
         "TRANG CHỦ", "ĐƠN HÀNG", "LIST ĐƠN HÀNG", 
         "NHÂN VIÊN", "MENU", "BÀN", "THỐNG KÊ"
     };
     
-    float buttonWidth = 100.0f / (menuItems.size() + 1); // Chia đều tỷ lệ cho các nút + nút Đăng xuất
-    auto menuButtons = std::make_shared<std::vector<tgui::Button::Ptr>>(); // Mảng lưu các nút để xử lý đổi màu khi active
+    float buttonWidth = 100.0f / (menuItems.size() + 1);
+    auto menuButtons = std::make_shared<std::vector<tgui::Button::Ptr>>();
 
-    // HÀM SWITCH TAB: Xử lý đổi màu nút đang chọn và thay đổi nội dung trang bên dưới
     tgui::Gui* pGui = &gui;
     
     auto switchTab = [contentPanel, menuButtons, &app, pGui](int index) {
@@ -287,19 +255,15 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
             }
         }
 
-        // 2. Xóa sạch các widget cũ bên trong vùng nội dung chính
         contentPanel->removeAllWidgets();
 
-        // 3. TẠM THỜI: Hiển thị số tương ứng (1 đến 7) để kiểm tra giao diện chuyển trang
         if (index == 0) {
-            // Load giao diện Trang Chủ
             loadHomeView(contentPanel, app);
         } else if (index == 3) {
             loadPersonView(contentPanel, app, pGui);
         } else if (index == 4) {
             loadMenuView(contentPanel, app);
         } else {
-            // Các trang khác tạm thời giữ nguyên hiển thị số thứ tự
             auto giantNumber = tgui::Label::create(to_string(index + 1));
             giantNumber->setTextSize(200); 
             giantNumber->setPosition("50%", "40%"); 
@@ -307,47 +271,39 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
             giantNumber->getRenderer()->setTextColor(tgui::Color(180, 180, 180));
             contentPanel->add(giantNumber);
         }
-        
-        // 👉 SAU NÀY KHI CODE TỪNG TÍNH NĂNG, BẠN SẼ THẾ KHỐI LỆNH VẼ SỐ NÀY 
-        // BẰNG CÁC HÀM RIÊNG BIỆT (VD: if (index == 3) loadEmployeeView(contentPanel); ...)
     };
 
-    // Tạo vòng lặp khởi tạo các nút trên thanh Menu Ngang
     for (size_t i = 0; i < menuItems.size(); ++i) {
         auto btn = tgui::Button::create(menuItems[i]);
-        btn->setTextSize(25); //Thay đổi cỡ chữ trên thanh Menu Ngang
+        btn->setTextSize(25);
         btn->setSize({tgui::String(to_string(buttonWidth) + "%"), "100%"});
         btn->setPosition({tgui::String(to_string(i * buttonWidth) + "%"), "0%"});
         
-        btn->getRenderer()->setBorders(0); // Bỏ viền để giao diện phẳng hiện đại
+        btn->getRenderer()->setBorders(0);
         btn->getRenderer()->setTextColor(tgui::Color::White);
         
         menuBar->add(btn);
         menuButtons->push_back(btn);
 
-        // Gắn sự kiện click để gọi hàm chuyển Tab tương ứng
         btn->onPress([switchTab, i]() {
             switchTab(i);
         });
     }
 
-    // --- Nút Đăng Xuất (Nằm ở cuối cùng bên phải thanh menu) ---
     auto btnLogout = tgui::Button::create("ĐĂNG XUẤT");
-    btnLogout->setTextSize(25); //Thay đổi cỡ chữ nút Đăng xuất
+    btnLogout->setTextSize(25);
     btnLogout->setSize({tgui::String(to_string(buttonWidth) + "%"), "100%"});
     btnLogout->setPosition({tgui::String(to_string(menuItems.size() * buttonWidth) + "%"), "0%"});
     btnLogout->getRenderer()->setBorders(0);
     btnLogout->getRenderer()->setBackgroundColor(tgui::Color(160, 140, 120)); 
-    btnLogout->getRenderer()->setTextColor(tgui::Color(255, 120, 120)); // Chữ màu đỏ nhạt cảnh báo
+    btnLogout->getRenderer()->setTextColor(tgui::Color(255, 120, 120));
     menuBar->add(btnLogout);
 
-    // Sự kiện Đăng xuất: Xóa phiên làm việc hiện tại và quay về màn hình Login (thu nhỏ)
     btnLogout->onPress([&gui, &window, &app]() {
         app.logout(); 
         loadLoginScreen(gui, window, app); 
     });
 
-    // MẶC ĐỊNH: Khi vừa đăng nhập thành công, tự động load tab đầu tiên (TRANG CHỦ - Index 0)
     switchTab(0);
 }
 
@@ -363,9 +319,6 @@ string formatCurrency(double amount) {
     return s + " đ";
 }
 
-// =========================================================================
-// MÀN HÌNH TRANG CHỦ (INDEX = 0)
-// =========================================================================
 void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     // -----------------------------------------------------
     // 1. HÀM HỖ TRỢ TẠO THẺ THỐNG KÊ (4 ô chữ nhật trên cùng)
@@ -402,16 +355,11 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
         return card;
     };
 
-    // Thêm 4 thẻ vào contentPanel (Các chỉ số hiện đang là dữ liệu giả lập - Hardcode)
-    // Sau này bạn sẽ gọi app.getDailyRevenue(), app.getDailyOrders()... để truyền vào
     contentPanel->add(createStatCard("Số đơn hàng trong ngày", to_string(todayOrders) + " Đơn", "3%", "5%", tgui::Color(50, 50, 50)));
     contentPanel->add(createStatCard("Doanh thu ngày", formatCurrency(todayRevenue), "27.5%", "5%", tgui::Color(30, 150, 50)));
     contentPanel->add(createStatCard("Số đơn đang xử lý", "3 Đơn", "52%", "5%", tgui::Color(200, 120, 0)));
     contentPanel->add(createStatCard("Số đơn huỷ", "1 Đơn", "76.5%", "5%", tgui::Color(200, 50, 50)));
 
-    // -----------------------------------------------------
-    // 2. KHUNG TRÁI: THỐNG KÊ TOP SẢN PHẨM BÁN CHẠY
-    // -----------------------------------------------------
     auto leftPanel = tgui::Panel::create({"46%", "68%"});
     leftPanel->setPosition("3%", "27%");
     leftPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -432,9 +380,6 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
 
     contentPanel->add(leftPanel);
 
-    // -----------------------------------------------------
-    // 3. KHUNG PHẢI: ĐƠN HÀNG GẦN ĐÂY (Sử dụng ListView để có thanh cuộn)
-    // -----------------------------------------------------
     auto rightPanel = tgui::Panel::create({"46%", "68%"});
     rightPanel->setPosition("52%", "27%");
     rightPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -448,7 +393,6 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     rightTitle->getRenderer()->setTextColor(tgui::Color(111, 78, 55));
     rightPanel->add(rightTitle);
 
-    // Bảng danh sách đơn hàng (TGUI ListView tự động tạo thanh cuộn nếu vượt quá kích thước)
     auto listView = tgui::ListView::create();
     listView->setSize("90%", "80%");
     listView->setPosition("5%", "15%");
@@ -456,23 +400,20 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     listView->setItemHeight(40);
     listView->setHeaderHeight(40);
     
-    // Thêm các cột theo bản thiết kế
     listView->addColumn("Mã Order", 120);
     listView->addColumn("Mã NV", 120);
     listView->addColumn("Nhân Viên", 275);
     listView->addColumn("Thời Gian", 205);
     listView->addColumn("Tổng Tiền", 150);
     listView->addColumn("Trạng Thái", 180);
-    listView->setColumnExpanded(6, true); //Cột cuối tự động khớp
+    listView->setColumnExpanded(6, true);
     
-    //Lấy dữ liệu 20 hoá đơn gần đây để hiển thị ở bảng
     vector<Order*> recentOrders = app.getOrderManager().getRecentOrders(20);
 
     for (Order* order : recentOrders){
         Person* staff = app.getPersonManager().findPersonByID(order->getEmployeeID());
         string staffName = (staff != nullptr) ? staff->getFullName() : "Không xác định";
 
-        //Hiện tại chỉ mới làm các đơn đã PAID nên tạm để là Hoàn thành
         string statusStr = "Hoàn thành";
 
         listView->addItem({
@@ -1027,16 +968,12 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
 
     auto panelEmp = tgui::Panel::create();
     panelEmp->setSize("100%", "100%");
-    panelEmp->getRenderer()->setBackgroundColor(tgui::Color(245, 240, 235)); // Màu nền be nhạt
+    panelEmp->getRenderer()->setBackgroundColor(tgui::Color(245, 240, 235));
     panelEmp->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
-    // Đã bỏ panelEmp->getRenderer()->setTextSize(22) để không ghi đè kích thước chữ của các widget con
 
-    // ==========================================
-    // KHỞI TẠO 2 PANEL CON BÊN TRONG (CÁCH ĐỀU MÉP 24PX)
-    // ==========================================
     auto leftPanel = tgui::Panel::create();
     leftPanel->setPosition("24", "24");
-    leftPanel->setSize("60% - 36", "100% - 80"); // Đổi 100% - 84 thành 100% - 48 để mép dưới đúng 24px (cách đều trên/dưới/trái/phải)
+    leftPanel->setSize("60% - 36", "100% - 80");
     leftPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
     leftPanel->getRenderer()->setBorderColor(COL_FRAME_BORDER);
     leftPanel->getRenderer()->setRoundedBorderRadius(10);
@@ -1044,7 +981,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
 
     auto rightPanel = tgui::Panel::create();
     rightPanel->setPosition("60% + 12", "24");
-    rightPanel->setSize("40% - 36", "100% - 80"); // Đổi 100% - 84 thành 100% - 48 để mép dưới đúng 24px (cách đều trên/dưới/trái/phải)
+    rightPanel->setSize("40% - 36", "100% - 80");
     rightPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
     rightPanel->getRenderer()->setBorderColor(COL_FRAME_BORDER);
     rightPanel->getRenderer()->setRoundedBorderRadius(10);
@@ -1052,7 +989,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
 
 
     auto lblLeftTitle = tgui::Label::create("DANH SÁCH NHÂN VIÊN");
-    lblLeftTitle->setPosition("4%", "2.5%"); // Tọa độ mới tính theo leftPanel
+    lblLeftTitle->setPosition("4%", "2.5%");
     lblLeftTitle->setTextSize(26);
     lblLeftTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
     lblLeftTitle->getRenderer()->setTextColor(tgui::Color(120, 60, 30));
@@ -1116,7 +1053,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
     listEmp->getRenderer()->setTextColor(tgui::Color(70, 70, 70));
 
     listEmp->setPosition("4%", tgui::bindBottom(searchEmp) + 18);
-    listEmp->setSize("92%", "100% - y - 48");
+    listEmp->setSize("92%", "100% - y - 96");
     listEmp->addColumn("MÃ NV", 180);
     listEmp->addColumn("HỌ TÊN", 0);
     listEmp->addColumn("CHỨC VỤ", 220);
@@ -1127,19 +1064,9 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
 
     listEmp->setHeaderHeight(56);
     listEmp->setItemHeight(52);
-
-
     leftPanel->add(listEmp, "listEmp");
 
-    auto lblPaging = tgui::Label::create("Hiển thị 10 trên 12 nhân viên");
-    lblPaging->setPosition("4%", tgui::bindBottom(listEmp) + 12);
-    lblPaging->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
-    leftPanel->add(lblPaging);
-
-
-    // ==========================================
     // CỘT PHẢI: BỐ CỤC CHIA ĐỀU KHẮP RIGHTPANEL
-    // ==========================================
     auto lblRightTitle = tgui::Label::create("THÔNG TIN CHI TIẾT");
     lblRightTitle->setPosition("4.5%", "2.5%");
     lblRightTitle->setTextSize(26);
@@ -1380,7 +1307,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
         }
     };
 
-    // Mặc định khi vừa vào Form: Khóa cả 3 nút
     setButtonState(btnAddEmp, false, tgui::Color(31, 107, 58));
     setButtonState(btnUpdateEmp, false, tgui::Color(47, 95, 138));
     setButtonState(btnDeleteEmp, false, tgui::Color(163, 45, 45));
@@ -1450,7 +1376,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
     editEmpHireDate->onTextChange([=](tgui::String text) { formatDateInput(text, editEmpHireDate); }); 
 
     auto checkFormValid = [=]() {
-        // Nếu form đang ở chế độ Cập nhật (Mã NV bị khóa) thì không mở nút Thêm Mới
         if (editEmpID->isReadOnly()) return; 
 
         bool isFull = !editEmpID->getText().empty() &&
@@ -1466,7 +1391,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
         setButtonState(btnAddEmp, isFull, tgui::Color(31, 107, 58));
     };
 
-    // Gắn "mắt thần" vào tất cả các ô nhập liệu
     editEmpID->onTextChange(checkFormValid);
     editEmpName->onTextChange(checkFormValid);
     editEmpDOB->onTextChange(checkFormValid);
@@ -1486,38 +1410,106 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
     btnClearForm->getRenderer()->setTextColor(tgui::Color(160, 82, 45));
     btnClearForm->getRenderer()->setBorders(0);
     btnClearForm->getRenderer()->setFont("assets/fonts/BeVietnamPro-SemiBold.ttf");
+
     btnClearForm->onPress([=]() {
-    editEmpID->setReadOnly(false);
-    editEmpName->setReadOnly(false);
-    radioMale->setEnabled(true);
-    radioFemale->setEnabled(true);
-    editEmpDOB->setReadOnly(false);
-    editEmpHireDate->setReadOnly(false);
+        editEmpID->setReadOnly(false);
+        editEmpName->setReadOnly(false);
+        radioMale->setEnabled(true);
+        radioFemale->setEnabled(true);
+        editEmpDOB->setReadOnly(false);
+        editEmpHireDate->setReadOnly(false);
 
-    tgui::Color defaultBg = editEmpPhone->getRenderer()->getBackgroundColor();
-    editEmpID->getRenderer()->setBackgroundColor(defaultBg);
-    editEmpName->getRenderer()->setBackgroundColor(defaultBg);
-    editEmpDOB->getRenderer()->setBackgroundColor(defaultBg);
-    editEmpHireDate->getRenderer()->setBackgroundColor(defaultBg);
+        tgui::Color defaultBg = editEmpPhone->getRenderer()->getBackgroundColor();
+        editEmpID->getRenderer()->setBackgroundColor(defaultBg);
+        editEmpName->getRenderer()->setBackgroundColor(defaultBg);
+        editEmpDOB->getRenderer()->setBackgroundColor(defaultBg);
+        editEmpHireDate->getRenderer()->setBackgroundColor(defaultBg);
 
-    comboEmpRole->deselectItem();
+        comboEmpRole->deselectItem();
     
-    editEmpID->setText("");
-    editEmpName->setText("");
-    radioMale->setChecked(false);
-    radioFemale->setChecked(false);
-    editEmpDOB->setText("");
-    editEmpPhone->setText("");
-    editEmpSalary->setText("");
-    comboEmpShift->deselectItem();
-    editEmpHireDate->setText("");
-    comboEmpStatus->setSelectedItemById("1");
+        editEmpID->setText("");
+        editEmpName->setText("");
+        radioMale->setChecked(false);
+        radioFemale->setChecked(false);
+        editEmpDOB->setText("");
+        editEmpPhone->setText("");
+        editEmpSalary->setText("");
+        comboEmpShift->deselectItem();
+        editEmpHireDate->setText("");
+        comboEmpStatus->setSelectedItemById("1");
     
-    setButtonState(btnAddEmp, false, tgui::Color(31, 107, 58));
-    setButtonState(btnUpdateEmp, false, tgui::Color(47, 95, 138));
-    setButtonState(btnDeleteEmp, false, tgui::Color(163, 45, 45));
-});
+        setButtonState(btnAddEmp, false, tgui::Color(31, 107, 58));
+        setButtonState(btnUpdateEmp, false, tgui::Color(47, 95, 138));
+        setButtonState(btnDeleteEmp, false, tgui::Color(163, 45, 45));
+    });
     rightPanel->add(btnClearForm, "btnClearForm");
+
+    static int currentPage = 1;
+    static int itemsPerPage = 20;
+    currentPage = 1;
+
+    auto btnFirst = tgui::Button::create("<<");
+    auto btnPrev = tgui::Button::create("<");
+    auto lblPageInfo = tgui::Label::create("1 / 1");
+    auto btnNext = tgui::Button::create(">");
+    auto btnLast = tgui::Button::create(">>");
+
+    // Hàm Lambda định hình Style chuẩn theo thiết kế toàn ứng dụng
+    auto stylePageButton = [](tgui::Button::Ptr btn) {
+        btn->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
+        btn->getRenderer()->setTextSize(20);
+        btn->getRenderer()->setRoundedBorderRadius(10);
+        btn->getRenderer()->setBorders(1);
+
+        // Trạng thái bình thường (Tone Be/Trắng đồng bộ COL_FRAME_BORDER)
+        btn->getRenderer()->setBackgroundColor(tgui::Color(255, 252, 248));
+        btn->getRenderer()->setTextColor(tgui::Color(90, 75, 65));
+        btn->getRenderer()->setBorderColor(COL_TEXTBOX_BORDER);
+
+        // Trạng thái Hover khi rê chuột vào
+        btn->getRenderer()->setBackgroundColorHover(tgui::Color(240, 230, 220));
+        btn->getRenderer()->setTextColorHover(tgui::Color(50, 40, 30));
+
+        // Trạng thái Disabled khi ở trang đầu/trang cuối (chìm nhẹ nhàng)
+        btn->getRenderer()->setBackgroundColorDisabled(tgui::Color(245, 242, 238));
+        btn->getRenderer()->setTextColorDisabled(tgui::Color(185, 180, 175));
+        btn->getRenderer()->setBorderColorDisabled(tgui::Color(230, 225, 220));
+    };
+
+    stylePageButton(btnFirst);
+    stylePageButton(btnPrev);
+    stylePageButton(btnNext);
+    stylePageButton(btnLast);
+
+    lblPageInfo->getRenderer()->setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    lblPageInfo->setTextSize(20);
+    lblPageInfo->setHorizontalAlignment(tgui::HorizontalAlignment::Center);
+    lblPageInfo->setVerticalAlignment(tgui::VerticalAlignment::Center);
+    lblPageInfo->getRenderer()->setTextColor(tgui::Color(90, 60, 40));
+
+    // Căn chỉnh vị trí bám sát mép phải 96% (mép phải của listEmp)
+    const char* yPos = "100% - 68";
+
+    btnLast->setPosition("96% - 44", yPos);
+    btnLast->setSize(45, 45);
+
+    btnNext->setPosition(tgui::bindLeft(btnLast) - 52, yPos);
+    btnNext->setSize(45, 45);
+
+    lblPageInfo->setPosition(tgui::bindLeft(btnNext) - 108, yPos);
+    lblPageInfo->setSize(100, 45);
+
+    btnPrev->setPosition(tgui::bindLeft(lblPageInfo) - 52, yPos);
+    btnPrev->setSize(45, 45);
+
+    btnFirst->setPosition(tgui::bindLeft(btnPrev) - 52, yPos);
+    btnFirst->setSize(45, 45);
+
+    leftPanel->add(btnFirst);
+    leftPanel->add(btnPrev);
+    leftPanel->add(lblPageInfo);
+    leftPanel->add(btnNext);
+    leftPanel->add(btnLast);
 
     auto refreshListView = [=, &app]() {
         listEmp->removeAllItems();
@@ -1527,13 +1519,50 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
 
         vector<Person*> filteredPersons = app.getPersonManager().searchPersons(keyword, shiftFilter, roleFilter);
 
-        for (Person* p : filteredPersons){
+        int totalItems = filteredPersons.size();
+        int totalPages = (totalItems == 0) ? 1 : (totalItems + itemsPerPage - 1) / itemsPerPage;
+
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        int startIndex = (currentPage - 1) * itemsPerPage;
+        int endIndex = min(startIndex + itemsPerPage, totalItems);
+
+        for (int i = startIndex; i < endIndex; i++){
+            Person* p = filteredPersons[i];
+
             string roleStr = ((int)p->getAccount().getRole() == 1) ? "Quản lí" : "Nhân viên";
             string statusStr = (p->getAccount().isActive()) ? "Đang làm" : "Đã nghỉ việc";
 
             listEmp->addItem({p->getPersonID(), p->getFullName(), roleStr, p->getShift(), statusStr});
         }
+
+        lblPageInfo->setText(to_string(currentPage) + " / " + to_string(totalPages));
+        btnFirst->setEnabled(currentPage > 1);
+        btnPrev->setEnabled(currentPage > 1);
+        btnNext->setEnabled(currentPage < totalPages);
+        btnLast->setEnabled(currentPage < totalPages);
     };
+
+    btnFirst->onPress([=]() {
+        currentPage = 1;
+        refreshListView();
+    });
+
+    btnPrev->onPress([=]() {
+        currentPage--;
+        refreshListView();
+    });
+
+    btnNext->onPress([=]() {
+        currentPage++;
+        refreshListView();
+    });
+
+    btnLast->onPress([=]() {
+        currentPage = 99999; 
+        refreshListView();
+    });
 
     refreshListView();
 
@@ -1617,25 +1646,21 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
                 }
                 
                 string username = (role == 1 ? "admin" : "staff") + lowerEmpID;
-                
                 string rawDOB = "";
                 string dobStr = editEmpDOB->getText().toStdString();
+
                 for (char c : dobStr) {
                     if (c != '/') rawDOB += c;
                 }
-                string password = lowerEmpID + rawDOB;
 
+                string password = lowerEmpID + rawDOB;
                 Account newAcc(username, password, true, (Role)role);
-                
                 string phoneStr = editEmpPhone->getText().toStdString();
                 string hireDateStr = editEmpHireDate->getText().toStdString();
                 
                 Person newEmp(empID, name, phoneStr, salary, hireDateStr, newAcc, gender, shift, dobStr);
-                
                 app.getPersonManager().addPerson(newEmp);
-                
                 refreshListView();
-
                 btnClearForm->onPress.emit(btnClearForm.get(), "");
             }
         );
@@ -1655,7 +1680,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
             catch (...) { newSalary = 0; }
         }
 
-        // Lấy thông tin cũ từ PersonManager
         Person* oldP = app.getPersonManager().findPersonByID(empID);
         if (!oldP) return;
         
@@ -1664,14 +1688,12 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
         string oldShift = oldP->getShift();
         int oldSalary = oldP->getSalary();
         string oldName = oldP->getFullName();
-
         string newRole = (role == 1) ? "Quản lí" : "Nhân viên";
 
         auto detailPanel = tgui::Panel::create();
         
         int currentY = 15;
         
-        // Hàm hiển thị một dòng thông tin (cũ -> mới)
         auto addChangeRow = [&](tgui::String title, tgui::String oldVal, tgui::String newVal) {
             auto lblTitle = tgui::Label::create(title);
             lblTitle->setPosition(20, currentY);
@@ -1689,7 +1711,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
                 auto lblNewVal = tgui::Label::create(newVal);
                 lblNewVal->setPosition("100% - width - 20", currentY);
                 lblNewVal->setTextSize(18);
-                lblNewVal->getRenderer()->setTextColor(tgui::Color(31, 107, 58)); // Xanh lá của nút Thêm
+                lblNewVal->getRenderer()->setTextColor(tgui::Color(31, 107, 58));
                 lblNewVal->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
                 detailPanel->add(lblNewVal);
                 
@@ -1708,7 +1730,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
             currentY += 45;
         };
 
-        // Luôn hiển thị dòng Nhân viên (không đổi)
         auto lblTitle = tgui::Label::create("Nhân viên");
         lblTitle->setPosition(20, currentY);
         lblTitle->setTextSize(18);
@@ -1722,7 +1743,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
         detailPanel->add(lblEmpInfo);
         currentY += 45;
 
-        // Biến đếm số lượng thay đổi
         int changesCount = 0;
 
         if (oldPhone != newPhone) {
@@ -1742,7 +1762,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
             changesCount++;
         }
 
-        // Nếu có thay đổi nhưng không phải thay đổi tất cả 4 mục
         if (changesCount > 0 && changesCount < 4) {
             auto lblNotice = tgui::Label::create("Các thông tin còn lại không thay đổi.");
             lblNotice->setPosition(20, currentY);
@@ -1752,7 +1771,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
             currentY += 45;
         }
 
-        // Lưu trữ chiều cao thực tế để dùng ở Bước 2
         detailPanel->setSize(0, currentY);
 
         showConfirmDialog(
@@ -1853,15 +1871,12 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
                 comboEmpStatus->setSelectedItemById("0");
             }
         }
-        // Khóa Thêm Mới, Mở Cập nhật & Nghỉ việc
         setButtonState(btnAddEmp, false, tgui::Color(31, 107, 58));
         setButtonState(btnUpdateEmp, true, tgui::Color(47, 95, 138));
         setButtonState(btnDeleteEmp, true, tgui::Color(163, 45, 45));
     });
 
     contentPanel->add(panelEmp);
-
-
 }
 
 // 3. HÀM MAIN CHÍNH (ENTRY POINT & EVENT LOOP)
