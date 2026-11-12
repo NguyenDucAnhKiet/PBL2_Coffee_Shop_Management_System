@@ -44,6 +44,7 @@ class Order{
         std::string getOrderID() const;
         std::string getEmployeeID() const;
         std::string getTableID() const;
+        void setTableID(const std::string& newTableID);
         std::string getOrderDate() const;
         std::vector<OrderItem> getItems() const;
         OrderType getType() const;

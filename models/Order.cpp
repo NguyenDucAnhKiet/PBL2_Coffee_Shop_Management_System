@@ -27,6 +27,10 @@ string Order::getTableID() const {
     return tableID;
 }
 
+void Order::setTableID(const string& newTableID) {
+    this->tableID = newTableID;
+}
+
 string Order::getOrderDate() const {
     return orderDate;
 }

@@ -7,7 +7,8 @@ enum class Role{
 
 enum class TableStatus{
     EMPTY,
-    OCCUPIED
+    OCCUPIED,
+    RESERVED
 };
 
 enum class OrderType{

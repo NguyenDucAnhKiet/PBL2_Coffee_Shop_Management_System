@@ -1,30 +1,37 @@
 #pragma once
 
 #include <string>
-#include "../json.hpp"
 #include "../common/Enums.h"
+#include "../json.hpp"
 
-class Table{
-    private:
-        std::string tableID;
-        TableStatus status;
-        int capacity;
+class Table {
+private:
+    std::string tableID;
+    TableStatus status;
+    int capacity;
 
-    public:
-        Table();
-        
-        Table(
-            std::string tableID,
-            TableStatus status,
-            int capacity
-        );
+public:
+    Table();
+    Table(std::string tableID, TableStatus status, int capacity);
 
-        std::string getTableID() const;
-        TableStatus getStatus() const;
-        int getCapacity() const;
+    // Getters
+    std::string getTableID() const;
+    TableStatus getStatus() const;
+    int getCapacity() const;
 
-        void occupyTable();
-        void releaseTable();
+    // Setters
+    void setTableID(const std::string& tableID);
+    void setStatus(TableStatus status);
+    bool setCapacity(int capacity);
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Table, tableID, status, capacity)
+    // Business methods
+    void occupyTable();
+    void releaseTable();
+    void reserveTable();
+    bool isAvailable() const;
+    bool isOccupied() const;
+    bool isReserved() const;
+    bool canAccommodate(int peopleCount) const;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Table, tableID, status, capacity)
 };
