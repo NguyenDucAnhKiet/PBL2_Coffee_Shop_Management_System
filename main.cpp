@@ -1,4 +1,4 @@
-﻿#include <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <TGUI/TGUI.hpp>
 #include <TGUI/Backend/SFML-Graphics.hpp>
 #include <iostream>
@@ -8,21 +8,18 @@
 #include <sstream>
 #include "Application.h"
 #include "ui/OrderScreen.h"
+#include "ui/TableScreen.h"
 
 const tgui::Color COL_FRAME_BORDER(227, 217, 204);
 const tgui::Color COL_TEXTBOX_BORDER(207, 194, 179);
 
 using namespace std;
 
-// =========================================================================
-// KHAI BÁO TRƯỚC CÁC HÀM GIAO DIỆN (Forward Declarations)
-// Giúp các hàm có thể gọi qua lại lẫn nhau khi cần chuyển cảnh (Scene Routing)
-// =========================================================================
 void loadLoginScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app);
 void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app);
 void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app);
 void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app);
-void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* gui);
+void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* pGui);
 
 void showConfirmDialog(tgui::Gui* gui, const tgui::String& title, const tgui::String& message, const tgui::String& iconText, tgui::Color iconBgColor, tgui::Panel::Ptr detailPanel, std::function<void()> onYes) {
     auto overlay = tgui::Panel::create({"100%", "100%"});
@@ -115,56 +112,99 @@ void showConfirmDialog(tgui::Gui* gui, const tgui::String& title, const tgui::St
 void loadLoginScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app) {
     gui.removeAllWidgets();
 
-    // --- Cấu hình kích thước cửa sổ cho màn hình Login ---
     window.setSize(sf::Vector2u(800, 600));
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     window.setPosition(sf::Vector2i((desktop.width - 800) / 2, (desktop.height - 600) / 2));
-    window.setView(sf::View(sf::FloatRect(0, 0, 800, 600))); 
+    window.setView(sf::View(sf::FloatRect(0, 0, 800, 600)));
 
-    // --- Tiêu đề form ---
+    try {
+        gui.setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    } catch (...) {}
+
+    auto loginCard = tgui::Panel::create({460, 480});
+    loginCard->setPosition("50%", "50%");
+    loginCard->setOrigin(0.5f, 0.5f);
+    loginCard->getRenderer()->setBackgroundColor(tgui::Color::White);
+    loginCard->getRenderer()->setBorders(1);
+    loginCard->getRenderer()->setBorderColor(tgui::Color(210, 200, 190));
+    loginCard->getRenderer()->setRoundedBorderRadius(15);
+    gui.add(loginCard);
+
     auto labelTitle = tgui::Label::create("ĐĂNG NHẬP HỆ THỐNG");
-    labelTitle->setTextSize(30);
-    labelTitle->setPosition("35%", "25%");
-    gui.add(labelTitle);
+    labelTitle->setTextSize(26);
+    labelTitle->setPosition("50%", 35);
+    labelTitle->setOrigin(0.5f, 0);
+    labelTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
+    labelTitle->getRenderer()->setTextColor(tgui::Color(111, 78, 55));
+    loginCard->add(labelTitle);
 
-    // --- Ô nhập Tên đăng nhập (Username) ---
+    auto labelSub = tgui::Label::create("Coffee Shop Management System");
+    labelSub->setTextSize(16);
+    labelSub->setPosition("50%", 75);
+    labelSub->setOrigin(0.5f, 0);
+    labelSub->getRenderer()->setTextColor(tgui::Color(140, 120, 100));
+    loginCard->add(labelSub);
+
+    auto lblUser = tgui::Label::create("Tên đăng nhập:");
+    lblUser->setTextSize(18);
+    lblUser->setPosition(40, 125);
+    lblUser->getRenderer()->setTextColor(tgui::Color(90, 45, 15));
+    loginCard->add(lblUser);
+
     auto editUsername = tgui::EditBox::create();
-    editUsername->setSize(300, 45);
-    editUsername->setPosition("35%", "35%");
-    editUsername->setDefaultText("Tên đăng nhập (VD: admin1)");
-    gui.add(editUsername);
+    editUsername->setSize(380, 45);
+    editUsername->setPosition(40, 155);
+    editUsername->setTextSize(18);
+    editUsername->setDefaultText("Nhập username (VD: admin1)");
+    editUsername->getRenderer()->setBorders(1);
+    editUsername->getRenderer()->setBorderColor(tgui::Color(190, 180, 170));
+    loginCard->add(editUsername);
 
-    // --- Ô nhập Mật khẩu (Password) ---
+    auto lblPass = tgui::Label::create("Mật khẩu:");
+    lblPass->setTextSize(18);
+    lblPass->setPosition(40, 215);
+    lblPass->getRenderer()->setTextColor(tgui::Color(90, 45, 15));
+    loginCard->add(lblPass);
+
     auto editPassword = tgui::EditBox::create();
-    editPassword->setSize(300, 45);
-    editPassword->setPosition("35%", "45%");
-    editPassword->setDefaultText("Mật khẩu");
-    editPassword->setPasswordCharacter('*'); // Ẩn mật khẩu thành dấu sao
-    gui.add(editPassword);
+    editPassword->setSize(380, 45);
+    editPassword->setPosition(40, 245);
+    editPassword->setTextSize(18);
+    editPassword->setDefaultText("Nhập mật khẩu");
+    editPassword->setPasswordCharacter('*');
+    editPassword->getRenderer()->setBorders(1);
+    editPassword->getRenderer()->setBorderColor(tgui::Color(190, 180, 170));
+    loginCard->add(editPassword);
 
-    // --- Nhãn hiển thị thông báo lỗi/thành công ---
     auto labelError = tgui::Label::create("");
-    labelError->setPosition("35%", "53%");
+    labelError->setPosition(40, 305);
+    labelError->setTextSize(16);
     labelError->getRenderer()->setTextColor(tgui::Color::Red);
-    gui.add(labelError);
+    loginCard->add(labelError);
 
-    // --- Nút bấm Đăng Nhập ---
     auto btnLogin = tgui::Button::create("ĐĂNG NHẬP");
-    btnLogin->setSize(300, 50);
-    btnLogin->setPosition("35%", "58%");
-    gui.add(btnLogin);
+    btnLogin->setSize(380, 50);
+    btnLogin->setPosition(40, 345);
+    btnLogin->setTextSize(20);
+    btnLogin->getRenderer()->setBackgroundColor(tgui::Color(111, 78, 55));
+    btnLogin->getRenderer()->setTextColor(tgui::Color::White);
+    btnLogin->getRenderer()->setRoundedBorderRadius(8);
+    loginCard->add(btnLogin);
 
-    // --- Xử lý sự kiện khi nhấn nút Đăng Nhập ---
-    btnLogin->onPress([&gui, &window, &app, editUsername, editPassword, labelError]() {
+    auto handleLogin = [&gui, &window, &app, editUsername, editPassword, labelError]() {
         string user = editUsername->getText().toStdString();
         string pass = editPassword->getText().toStdString();
 
         if (app.login(user, pass)) {
             loadDashboardScreen(gui, window, app); 
         } else {
-            labelError->setText("Sai tai khoan, mat khau hoac tai khoan bi khoa!");
+            labelError->setText("Sai tài khoản, mật khẩu hoặc tài khoản bị khóa!");
         }
-    });
+    };
+
+    btnLogin->onPress(handleLogin);
+    editUsername->onReturnKeyPress(handleLogin);
+    editPassword->onReturnKeyPress(handleLogin);
 }
 
 void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& app) {
@@ -187,7 +227,6 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
     int roleValue = (int)currentUser->getAccount().getRole();
     string roleName = (roleValue == 1) ? "Quản Lý" : "Nhân Viên";
 
-    //Tạo phần hiển thị Tên + Vai trò 
     auto shadowPanel = tgui::Panel::create({"10.3%", "14.5%"});
     shadowPanel->setPosition("65%", "2%");
     shadowPanel->getRenderer()->setBackgroundColor(tgui::Color(120, 120, 120, 60));
@@ -245,14 +284,13 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
     auto menuButtons = std::make_shared<std::vector<tgui::Button::Ptr>>();
 
     tgui::Gui* pGui = &gui;
-    
+
     auto switchTab = [contentPanel, menuButtons, &app, pGui](int index) {
-        // 1. Đổi màu trạng thái Active (Nút nào được bấm sẽ đậm màu hơn các nút còn lại)
         for (size_t i = 0; i < menuButtons->size(); ++i) {
             if (i == index) {
-                (*menuButtons)[i]->getRenderer()->setBackgroundColor(tgui::Color(110, 90, 70)); // Màu đậm khi chọn
+                (*menuButtons)[i]->getRenderer()->setBackgroundColor(tgui::Color(110, 90, 70));
             } else {
-                (*menuButtons)[i]->getRenderer()->setBackgroundColor(tgui::Color(160, 140, 120)); // Màu nhạt mặc định
+                (*menuButtons)[i]->getRenderer()->setBackgroundColor(tgui::Color(160, 140, 120));
             }
         }
 
@@ -274,6 +312,7 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
             giantNumber->getRenderer()->setTextColor(tgui::Color(180, 180, 180));
             contentPanel->add(giantNumber);
         }
+        
     };
 
     for (size_t i = 0; i < menuItems.size(); ++i) {
@@ -282,31 +321,35 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
         btn->setSize({tgui::String(to_string(buttonWidth) + "%"), "100%"});
         btn->setPosition({tgui::String(to_string(i * buttonWidth) + "%"), "0%"});
         
-        btn->getRenderer()->setBorders(0);
+        btn->getRenderer()->setBorders(0); 
         btn->getRenderer()->setTextColor(tgui::Color::White);
         
         menuBar->add(btn);
         menuButtons->push_back(btn);
 
+        // Gắn sự kiện click để gọi hàm chuyển Tab tương ứng
         btn->onPress([switchTab, i]() {
             switchTab(i);
         });
     }
 
+    // --- Nút Đăng Xuất (Nằm ở cuối cùng bên phải thanh menu) ---
     auto btnLogout = tgui::Button::create("ĐĂNG XUẤT");
-    btnLogout->setTextSize(25);
+    btnLogout->setTextSize(25); //Thay đổi cỡ chữ nút Đăng xuất
     btnLogout->setSize({tgui::String(to_string(buttonWidth) + "%"), "100%"});
     btnLogout->setPosition({tgui::String(to_string(menuItems.size() * buttonWidth) + "%"), "0%"});
     btnLogout->getRenderer()->setBorders(0);
     btnLogout->getRenderer()->setBackgroundColor(tgui::Color(160, 140, 120)); 
-    btnLogout->getRenderer()->setTextColor(tgui::Color(255, 120, 120));
+    btnLogout->getRenderer()->setTextColor(tgui::Color(255, 120, 120)); // Chữ màu đỏ nhạt cảnh báo
     menuBar->add(btnLogout);
 
+    // Sự kiện Đăng xuất: Xóa phiên làm việc hiện tại và quay về màn hình Login (thu nhỏ)
     btnLogout->onPress([&gui, &window, &app]() {
         app.logout(); 
         loadLoginScreen(gui, window, app); 
     });
 
+    // MẶC ĐỊNH: Khi vừa đăng nhập thành công, tự động load tab đầu tiên (TRANG CHỦ - Index 0)
     switchTab(0);
 }
 
@@ -322,6 +365,9 @@ string formatCurrency(double amount) {
     return s + " đ";
 }
 
+// =========================================================================
+// MÀN HÌNH TRANG CHỦ (INDEX = 0)
+// =========================================================================
 void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     // -----------------------------------------------------
     // 1. HÀM HỖ TRỢ TẠO THẺ THỐNG KÊ (4 ô chữ nhật trên cùng)
@@ -358,11 +404,16 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
         return card;
     };
 
+    // Thêm 4 thẻ vào contentPanel (Các chỉ số hiện đang là dữ liệu giả lập - Hardcode)
+    // Sau này bạn sẽ gọi app.getDailyRevenue(), app.getDailyOrders()... để truyền vào
     contentPanel->add(createStatCard("Số đơn hàng trong ngày", to_string(todayOrders) + " Đơn", "3%", "5%", tgui::Color(50, 50, 50)));
     contentPanel->add(createStatCard("Doanh thu ngày", formatCurrency(todayRevenue), "27.5%", "5%", tgui::Color(30, 150, 50)));
     contentPanel->add(createStatCard("Số đơn đang xử lý", "3 Đơn", "52%", "5%", tgui::Color(200, 120, 0)));
     contentPanel->add(createStatCard("Số đơn huỷ", "1 Đơn", "76.5%", "5%", tgui::Color(200, 50, 50)));
 
+    // -----------------------------------------------------
+    // 2. KHUNG TRÁI: THỐNG KÊ TOP SẢN PHẨM BÁN CHẠY
+    // -----------------------------------------------------
     auto leftPanel = tgui::Panel::create({"46%", "68%"});
     leftPanel->setPosition("3%", "27%");
     leftPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -383,6 +434,9 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
 
     contentPanel->add(leftPanel);
 
+    // -----------------------------------------------------
+    // 3. KHUNG PHẢI: ĐƠN HÀNG GẦN ĐÂY (Sử dụng ListView để có thanh cuộn)
+    // -----------------------------------------------------
     auto rightPanel = tgui::Panel::create({"46%", "68%"});
     rightPanel->setPosition("52%", "27%");
     rightPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -396,6 +450,7 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     rightTitle->getRenderer()->setTextColor(tgui::Color(111, 78, 55));
     rightPanel->add(rightTitle);
 
+    // Bảng danh sách đơn hàng (TGUI ListView tự động tạo thanh cuộn nếu vượt quá kích thước)
     auto listView = tgui::ListView::create();
     listView->setSize("90%", "80%");
     listView->setPosition("5%", "15%");
@@ -403,20 +458,23 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     listView->setItemHeight(40);
     listView->setHeaderHeight(40);
     
+    // Thêm các cột theo bản thiết kế
     listView->addColumn("Mã Order", 120);
     listView->addColumn("Mã NV", 120);
     listView->addColumn("Nhân Viên", 275);
     listView->addColumn("Thời Gian", 205);
     listView->addColumn("Tổng Tiền", 150);
     listView->addColumn("Trạng Thái", 180);
-    listView->setColumnExpanded(6, true);
+    listView->setColumnExpanded(6, true); //Cột cuối tự động khớp
     
+    //Lấy dữ liệu 20 hoá đơn gần đây để hiển thị ở bảng
     vector<Order*> recentOrders = app.getOrderManager().getRecentOrders(20);
 
     for (Order* order : recentOrders){
         Person* staff = app.getPersonManager().findPersonByID(order->getEmployeeID());
         string staffName = (staff != nullptr) ? staff->getFullName() : "Không xác định";
 
+        //Hiện tại chỉ mới làm các đơn đã PAID nên tạm để là Hoàn thành
         string statusStr = "Hoàn thành";
 
         listView->addItem({
@@ -433,8 +491,14 @@ void loadHomeView(tgui::Panel::Ptr contentPanel, Application& app) {
     contentPanel->add(rightPanel);
 }
 
+// =========================================================================
+// MÀN HÌNH QUẢN LÝ MENU (INDEX = 4)
+// Dựa theo Wireframe: Trái (Danh sách + Lọc) - Phải (Chi tiết + Nút chức năng)
+// =========================================================================
 void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
+    // -----------------------------------------------------
     // KHU VỰC TRÁI: DANH SÁCH MÓN & TÌM KIẾM (62% chiều rộng)
+    // -----------------------------------------------------
     auto leftPanel = tgui::Panel::create({"62%", "90%"});
     leftPanel->setPosition("2%", "5%");
     leftPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -443,6 +507,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     leftPanel->getRenderer()->setRoundedBorderRadius(10);
     contentPanel->add(leftPanel);
 
+    // Tiêu đề
     auto lblListTitle = tgui::Label::create("DANH SÁCH MÓN");
     lblListTitle->setPosition("5%", "4%");
     lblListTitle->setTextSize(22);
@@ -451,6 +516,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     lblListTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
     leftPanel->add(lblListTitle);
 
+    // Thanh tìm kiếm
     auto searchBox = tgui::EditBox::create();
     searchBox->setSize("43%", 45);
     searchBox->setPosition("5%", "11%");
@@ -459,6 +525,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     searchBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
     leftPanel->add(searchBox);
 
+    // Bộ lọc theo loại món (ComboBox)
     auto filterCombo = tgui::ComboBox::create();
     filterCombo->setSize("30%", 45);
     filterCombo->setPosition("50%", "11%");
@@ -471,6 +538,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     filterCombo->setSelectedItem("Tất cả");
     leftPanel->add(filterCombo);
 
+    // Nút Tìm kiếm
     auto btnSearch = tgui::Button::create("Tìm");
     btnSearch->setSize("13%", 45);
     btnSearch->setPosition("82%", "11%");
@@ -479,6 +547,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnSearch->getRenderer()->setTextColor(tgui::Color::White);
     leftPanel->add(btnSearch);
 
+    // Bảng danh sách sản phẩm (ListView)
     auto listView = tgui::ListView::create();
     listView->setSize("90%", "72%");
     listView->setPosition("5%", "20%");
@@ -486,6 +555,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     listView->setItemHeight(45);
     listView->setHeaderHeight(50);
     
+    // Khởi tạo các cột (Bỏ cột Ảnh vì TGUI ListView chuộng hiển thị text)
     listView->addColumn("Mã Món", 175);
     listView->addColumn("Tên Món", 200);
     listView->addColumn("Phân Loại", 175);
@@ -493,6 +563,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     listView->addColumn("Trạng Thái", 175);
     listView->setColumnExpanded(1, true);
 
+    //
     static vector<Product*> currentProducts;
     static int currentPage = 1;
 
@@ -585,7 +656,9 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     refreshListView();
     leftPanel->add(listView);
 
+    // -----------------------------------------------------
     // KHU VỰC PHẢI: THÔNG TIN CHI TIẾT & CHỨC NĂNG (32% chiều rộng)
+    // -----------------------------------------------------
     auto rightPanel = tgui::Panel::create({"32%", "90%"});
     rightPanel->setPosition("66%", "5%");
     rightPanel->getRenderer()->setBackgroundColor(tgui::Color::White);
@@ -602,6 +675,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     lblDetailTitle->getRenderer()->setTextColor(tgui::Color(111, 78, 55));
     rightPanel->add(lblDetailTitle);
 
+    // Khung chứa Ảnh minh họa
     auto productImg = tgui::Picture::create();
     productImg->setSize("35%", tgui::bindWidth(productImg));
     productImg->setPosition("32.5%", "7.5%");
@@ -618,6 +692,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     rightPanel->add(imgBorder);
 
     // Hàm hỗ trợ tạo Label + Input form dọc
+    // Đổi sang float để tinh chỉnh tọa độ chi tiết hơn. Kéo toàn bộ khối lên mốc 38%
     float startY = 39.0f; 
     float rowSpacing = 9.5f;
     
@@ -631,6 +706,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
 
         auto edit = tgui::EditBox::create();
         edit->setSize("60%", 45);
+        // ÉP SÁT LẠI: Rút gọn khoảng cách giữa chữ và ô nhập xuống chỉ còn 2.5% (trước đây là 4%)
         edit->setPosition("35%", (to_string(yOffset) + "%").c_str());
         edit->setTextSize(20);
         edit->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
@@ -639,11 +715,15 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
         return edit;
     };
 
+    // Tạo các ô nhập liệu (Các nhóm giờ chỉ cách nhau 9%)
     auto editID = createInputGroup("Mã món:", "Ví dụ: CF01", startY);
     auto editName = createInputGroup("Tên món:", "Ví dụ: Cà Phê Đen", startY + rowSpacing);
     auto editCategory = createInputGroup("Phân loại:", "Ví dụ: Cà phê", startY + rowSpacing * 2.0f);
     auto editPrice = createInputGroup("Đơn giá (VNĐ):", "Ví dụ: 20000", startY + rowSpacing * 3.0f);
 
+    // 1. KHÓA CÁC TRƯỜNG CỐ ĐỊNH (Không cho phép người dùng gõ vào)
+
+    // 2. THÊM COMBOBOX TRẠNG THÁI (Nằm ở mốc 36%)
     auto lblStatus = tgui::Label::create("Trạng thái:");
     lblStatus->setPosition("5%", (to_string(startY + rowSpacing * 4.0f + 2.0f) + "%").c_str());
     lblStatus->setTextSize(20);
@@ -653,23 +733,23 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
 
     auto comboStatus = tgui::ComboBox::create();
     comboStatus->setSize("60%", 45);
+    // Ép sát ComboBox vào chữ "Trạng thái" với khoảng cách 2.5% y hệt như các ô trên
     comboStatus->setPosition("35%", (to_string(startY + rowSpacing * 4.0f) + "%").c_str());
     comboStatus->setTextSize(20);
     comboStatus->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
-    comboStatus->addItem("Đang bán", "1"); 
-    comboStatus->addItem("Ngừng bán", "0"); 
+    comboStatus->addItem("Đang bán", "1"); // ID là "1"
+    comboStatus->addItem("Ngừng bán", "0"); // ID là "0"
     rightPanel->add(comboStatus);
-    
+    // -----------------------------------------------------
     // KHU VỰC NÚT CHỨC NĂNG (Thêm, Sửa, Xoá)
+    // -----------------------------------------------------
     auto btnAdd = tgui::Button::create("THÊM MỚI");
     btnAdd->setSize("28%", 45);
     btnAdd->setPosition("5%", "88%");
     btnAdd->setTextSize(20);
     btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69)); // Xanh lá
     btnAdd->getRenderer()->setTextColor(tgui::Color::White);
-    btnAdd->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
-    btnAdd->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
-    btnAdd->getRenderer()->setRoundedBorderRadius(10);
+    rightPanel->add(btnAdd);
 
     auto btnUpdate = tgui::Button::create("CẬP NHẬT");
     btnUpdate->setSize("28%", 45);
@@ -677,9 +757,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnUpdate->setTextSize(20);
     btnUpdate->getRenderer()->setBackgroundColor(tgui::Color(255, 193, 7)); // Vàng cam
     btnUpdate->getRenderer()->setTextColor(tgui::Color(50, 50, 50));
-    btnUpdate->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
-    btnUpdate->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
-    btnUpdate->getRenderer()->setRoundedBorderRadius(10);
+    rightPanel->add(btnUpdate);
 
     auto btnDelete = tgui::Button::create("XÓA MÓN");
     btnDelete->setSize("28%", 45);
@@ -687,46 +765,11 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
     btnDelete->setTextSize(20);
     btnDelete->getRenderer()->setBackgroundColor(tgui::Color(220, 53, 69)); // Đỏ
     btnDelete->getRenderer()->setTextColor(tgui::Color::White);
-    btnDelete->getRenderer()->setBackgroundColorDisabled(tgui::Color(200, 200, 200));
-    btnDelete->getRenderer()->setTextColorDisabled(tgui::Color(150, 150, 150));
-    btnDelete->getRenderer()->setRoundedBorderRadius(10);
-
-    rightPanel->add(btnAdd);
-    rightPanel->add(btnUpdate);
     rightPanel->add(btnDelete);
 
-    auto updateButtonStates = [=]() {
-        bool hasSelection = !editID->isEnabled();
-        bool isFilled = !editID->getText().empty() && !editName->getText().empty() && 
-                    !editCategory->getText().empty() && !editPrice->getText().empty();
-
-        if (hasSelection) {
-            btnAdd->setText("HỦY CHỌN");
-            btnAdd->getRenderer()->setBackgroundColor(tgui::Color(108, 117, 125));
-            btnAdd->setEnabled(true);
-            btnUpdate->setEnabled(true);
-            btnDelete->setEnabled(true);
-        } else if (isFilled) {
-            btnAdd->setText("THÊM MỚI");
-            btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
-            btnAdd->setEnabled(true);
-            btnUpdate->setEnabled(false);
-            btnDelete->setEnabled(false);
-        } else {
-            btnAdd->setText("THÊM MỚI");
-            btnAdd->getRenderer()->setBackgroundColor(tgui::Color(40, 167, 69));
-            btnAdd->setEnabled(false);
-            btnUpdate->setEnabled(false);
-            btnDelete->setEnabled(false);
-        }
-    };
-    editID->onTextChange(updateButtonStates);
-    editName->onTextChange(updateButtonStates);
-    editCategory->onTextChange(updateButtonStates);
-    editPrice->onTextChange(updateButtonStates);
-    updateButtonStates();
-    
+    // =====================================================
     // SỰ KIỆN: Khi click vào 1 dòng trong bảng -> Đổ dữ liệu qua form phải
+    // =====================================================
     listView->onItemSelect([=, &app](int index) {
         if (index >= 0) {
             string selectedID = listView->getItemCell(index, 0).toStdString();
@@ -735,6 +778,7 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
                 editID->setText(p->getProductID());
                 editName->setText(p->getName());
                 editCategory->setText(p->getCategory());
+                // Hiển thị giá số nguyên (không có chữ 'đ' hay dấu phẩy) để dễ cập nhật
                 editPrice->setText(to_string((long long)p->getPrice())); 
                 
                 editID->setEnabled(false);
@@ -742,73 +786,53 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
                 editCategory->setEnabled(false);
 
                 if (p->isAvailable()) {
-                    comboStatus->setSelectedItemById("1");
+                    comboStatus->setSelectedItemById("1"); // 1 tương ứng "Đang bán"
                 } else {
-                    comboStatus->setSelectedItemById("0");
+                    comboStatus->setSelectedItemById("0"); // 0 tương ứng "Ngừng bán"
                 }
 
                 string imgPath = "assets/images/" + p->getProductID() + ".png";
                 try {
                     productImg->getRenderer()->setTexture(imgPath.c_str());
                 } catch (...){
-                    productImg->getRenderer()->setTexture("assets/images/default.png");
+                    productImg->getRenderer()->setTexture("");
                 }
             }
-            updateButtonStates();
         }
     });
 
     //CHỨC NĂNG 1: CẬP NHẬT GIÁ VÀ TRẠNG THÁI
     btnUpdate->onPress([=, &app](){
         string selectedID = editID->getText().toStdString();
-        
         if (selectedID.empty()){
             cout << "[THÔNG BÁO] Vui lòng chọn 1 món để cập nhật!" << endl;
             return;
         }
 
         Product* p = app.getProductManager().findProductByID(selectedID);
-        if (p == nullptr){
-            cout << "[LỖI] Không tìm thấy dữ liệu món này trong hệ thống!" << endl;
-            return;
-        }
+        if (p != nullptr){
+            try {
+                double newPrice = stod(editPrice->getText().toStdString());
 
-        auto msgBox = tgui::MessageBox::create("XÁC NHẬN CẬP NHẬT", 
-            "Bạn có chắc chắn muốn cập nhật thông tin cho món " + p->getName() + " không?", 
-            {"Đồng ý", "Hủy"});
-
-        msgBox->setPosition("35%", "35%");
-        msgBox->setTextSize(18);
-        msgBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
-
-        msgBox->onButtonPress([=, &app](const tgui::String& button) {
-            if (button == "Đồng ý") {
-                try {
-                    double newPrice = stod(editPrice->getText().toStdString());
-
-                    if (!p->changePrice(newPrice)){
-                        cout << "[LỖI] Giá tiền không được là số âm!" << endl;
-                    } else {
-                        bool isSelling = (comboStatus->getSelectedItemId() == "1");
-                        if (isSelling){
-                            p->markAvailable();
-                        } else {
-                            p->markUnavailable();
-                        }
-
-                        refreshListView();
-                        
-                        cout << "[THÀNH CÔNG] Đã cập nhật món: " << selectedID << endl;
-                        updateButtonStates();
-                    }
-                } catch (...) {
-                    cout << "[LỖI] Đơn giá nhập vào không hợp lệ (chỉ được nhập số)!" << endl;
+                if (!p->changePrice(newPrice)){
+                    cout << "[LỖI] Giá tiền không được là số âm!" << endl;
+                    return;
                 }
-            }
-            contentPanel->remove(msgBox);
-        });
 
-        contentPanel->add(msgBox);
+                bool isSelling = (comboStatus->getSelectedItemId() == "1");
+                if (isSelling){
+                    p->markAvailable();
+                } else {
+                    p->markUnavailable();
+                }
+
+                refreshListView();
+                
+                cout << "[THÀNH CÔNG] Đã cập nhật món: " << selectedID << endl;
+            } catch (...) {
+                cout << "[LỖI] Đơn giá nhập vào không hợp lệ (chỉ được nhập số)!" << endl;
+            }
+        }
     });
 
     //CHỨC NĂNG 2: THÊM MỚI MÓN
@@ -829,7 +853,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
             productImg->getRenderer()->setTexture("assets/images/default.png");
 
             cout << "[THÔNG BÁO] Form đã dọn sạch. Hãy nhập thông tin món mới!" << endl;
-            updateButtonStates();
             return;
         }
 
@@ -854,44 +877,20 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
                 cout << "[LỖI] Mã món '" << id << "'đã tồn tại! Vui lòng chọn mã khác." << endl;
                 return;
             }
-            
-            if (app.getProductManager().checkNameExist(name)){
-                cout << "[LỖI] Tên món '" << name << "' đã tồn tại! Vui lòng chọn tên khác." << endl;
-                return;
-            }
 
-            auto msgBox = tgui::MessageBox::create("XÁC NHẬN THÊM MỚI", 
-                "Bạn có chắc chắn muốn thêm món mới " + name + " vào menu không?", 
-                {"Đồng ý", "Hủy"});
+            bool isAvailable = (comboStatus->getSelectedItemId() == "1");
+            Product newProduct(id, name, price, cat, isAvailable);
 
-            msgBox->setPosition("35%", "35%");
-            msgBox->setTextSize(18);
-            msgBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
+            app.getProductManager().addProduct(newProduct);
 
-            msgBox->onButtonPress([=, &app](const tgui::String& button) {
-                if (button == "Đồng ý") {
-                    bool isAvailable = (comboStatus->getSelectedItemId() == "1");
-                    Product newProduct(id, name, price, cat, isAvailable);
+            refreshListView();
 
-                    app.getProductManager().addProduct(newProduct);
+            editID->setText("");
+            editName->setText("");
+            editCategory->setText("");
+            editPrice->setText("");
 
-                    filterCombo->setSelectedItem("Tất cả");
-
-                    refreshListView();
-
-                    editID->setText("");
-                    editName->setText("");
-                    editCategory->setText("");
-                    editPrice->setText("");
-
-                    cout << "[THÀNH CÔNG] Đã thêm món mới: " << name << endl;
-                    updateButtonStates();
-                }
-                contentPanel->remove(msgBox);
-            });
-
-            contentPanel->add(msgBox);
-
+            cout << "[THÀNH CÔNG] Đã thêm món mới: " << name << endl;
         } catch (...){
             cout << "[LỖI] Đơn giá nhập vào không hợp lệ (chỉ được nhập số)!" << endl;
         }
@@ -906,41 +905,25 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
             return;
         }
 
-        auto msgBox = tgui::MessageBox::create("XÁC NHẬN XÓA MÓN", 
-            "Bạn có chắc chắn muốn xóa vĩnh viễn món " + selectedID + " khỏi hệ thống không?", 
-            {"Đồng ý", "Hủy"});
+        bool isDeleted = app.getProductManager().removeProduct(selectedID);
 
-        msgBox->setPosition("35%", "35%");
-        msgBox->setTextSize(18);
-        msgBox->getRenderer()->setFont("assets/fonts/Times-New-Roman.ttf");
+        if (isDeleted){
+            refreshListView();
 
-        msgBox->onButtonPress([=, &app](const tgui::String& button) {
-            if (button == "Đồng ý") {
-                bool isDeleted = app.getProductManager().removeProduct(selectedID);
+            editID->setText("");
+            editName->setText("");
+            editCategory->setText("");
+            editPrice->setText("");
+            comboStatus->setSelectedItemById("1");
 
-                if (isDeleted){
-                    refreshListView();
+            editID->setEnabled(true);
+            editName->setEnabled(true);
+            editCategory->setEnabled(true);
 
-                    editID->setText("");
-                    editName->setText("");
-                    editCategory->setText("");
-                    editPrice->setText("");
-                    comboStatus->setSelectedItemById("1");
-
-                    editID->setEnabled(true);
-                    editName->setEnabled(true);
-                    editCategory->setEnabled(true);
-
-                    cout << "[THÀNH CÔNG] Đã xóa món: " << selectedID << endl;
-                    updateButtonStates();
-                } else {
-                    cout << "[LỖI] Không thể xóa! Có thể mã món không tồn tại." << endl;
-                }
-            }
-            contentPanel->remove(msgBox);
-        });
-
-        contentPanel->add(msgBox);
+            cout << "[THÀNH CÔNG] Đã xóa món: " << selectedID << endl;
+        } else {
+            cout << "[LỖI] Không thể xóa! Có thể mã món không tồn tại." << endl;
+        }
     });
 
     auto performSearch = [=]() {
@@ -958,7 +941,6 @@ void loadMenuView(tgui::Panel::Ptr contentPanel, Application& app) {
         editName->setEnabled(true);
         editCategory->setEnabled(true);
         productImg->getRenderer()->setTexture("assets/images/default.png");
-        updateButtonStates();
     };
 
     btnSearch->onPress(performSearch);
@@ -1718,7 +1700,8 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
                 lblNewVal->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
                 detailPanel->add(lblNewVal);
                 
-                auto lblArrow = tgui::Label::create(u8"➜");
+                auto lblArrow = tgui::Label::create(tgui::String(u8"→"));
+                lblArrow->getRenderer()->setFont("assets/fonts/Roboto-Regular.ttf");
                 lblArrow->setPosition(tgui::bindLeft(lblNewVal) - tgui::bindWidth(lblArrow) - 10, currentY);
                 lblArrow->setTextSize(18);
                 lblArrow->getRenderer()->setTextColor(tgui::Color(100, 100, 100));
@@ -1882,8 +1865,6 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
     contentPanel->add(panelEmp);
 }
 
-// 3. HÀM MAIN CHÍNH (ENTRY POINT & EVENT LOOP)
-// Vai trò: Khởi tạo Application, nạp dữ liệu từ file txt, tạo cửa sổ và chạy vòng lặp sự kiện
 int main() {
     // Khởi tạo đối tượng Application chứa toàn bộ các Manager (Product, Person, Table, Order)
     Application app;
@@ -1896,6 +1877,10 @@ int main() {
     // Khởi tạo cửa sổ đồ họa SFML với kích thước mặc định ban đầu (sẽ được định hình lại ở màn hình Login)
     sf::RenderWindow window(sf::VideoMode(800, 600), "Coffee Shop Management - PBL2", sf::Style::Titlebar | sf::Style::Close);
     tgui::Gui gui(window); // Gắn giao diện TGUI vào cửa sổ SFML
+
+    try {
+        gui.setFont("assets/fonts/BeVietnamPro-Regular.ttf");
+    } catch (...) {}
 
     // Mở màn hình Đăng Nhập làm giao diện đầu tiên khi khởi chạy ứng dụng
     loadLoginScreen(gui, window, app);
