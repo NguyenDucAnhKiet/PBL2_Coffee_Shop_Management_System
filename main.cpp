@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <sstream>
 #include "Application.h"
+#include "ui/OrderScreen.h"
 
 const tgui::Color COL_FRAME_BORDER(227, 217, 204);
 const tgui::Color COL_TEXTBOX_BORDER(207, 194, 179);
@@ -259,6 +260,8 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
 
         if (index == 0) {
             loadHomeView(contentPanel, app);
+        } else if (index == 1) {
+            loadOrderView(contentPanel, app, pGui);
         } else if (index == 3) {
             loadPersonView(contentPanel, app, pGui);
         } else if (index == 4) {
@@ -991,7 +994,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
     auto lblLeftTitle = tgui::Label::create("DANH SÁCH NHÂN VIÊN");
     lblLeftTitle->setPosition("4%", "2.5%");
     lblLeftTitle->setTextSize(26);
-    lblLeftTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
+    //lblLeftTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
     lblLeftTitle->getRenderer()->setTextColor(tgui::Color(120, 60, 30));
     lblLeftTitle->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
     leftPanel->add(lblLeftTitle);
@@ -1070,7 +1073,7 @@ void loadPersonView(tgui::Panel::Ptr contentPanel, Application& app, tgui::Gui* 
     auto lblRightTitle = tgui::Label::create("THÔNG TIN CHI TIẾT");
     lblRightTitle->setPosition("4.5%", "2.5%");
     lblRightTitle->setTextSize(26);
-    lblRightTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
+    //lblRightTitle->getRenderer()->setTextStyle(tgui::TextStyle::Bold);
     lblRightTitle->getRenderer()->setTextColor(tgui::Color(120, 60, 30));
     lblRightTitle->getRenderer()->setFont("assets/fonts/BeVietnamPro-Bold.ttf");
     rightPanel->add(lblRightTitle);
