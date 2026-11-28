@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "storage/DataManager.h"
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -16,8 +17,11 @@ bool Application::login(string username, string password){
 bool Application::initialize(){
     DataManager dm;
     bool success = true;
+    ifstream testFile("data/persons.json");
+    cout << "[DEBUG] open persons.json: " << testFile.is_open() << endl;
 
     if (!dm.loadPersons(personManager, "data/persons.json")) success = false;
+    cout << "[DEBUG] loaded persons count: " << personManager.getAllPersons().size() << endl;
     if (!dm.loadProducts(productManager, "data/products.json")) success = false;
     if (!dm.loadTables(tableManager, "data/tables.json")) success = false;
     if (!dm.loadOrders(orderManager, productManager, "data/orders.json")) success = false;

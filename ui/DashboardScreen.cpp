@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include "TableScreen.h"
 
 using namespace std;
 
@@ -104,8 +105,12 @@ void loadDashboardScreen(tgui::Gui& gui, sf::RenderWindow& window, Application& 
             loadOrderView(contentPanel, app, pGui);
         } else if (index == 3) {
             loadPersonView(contentPanel, app, pGui);
-        } else if (index == 4) {
+        }
+        else if (index == 4) {
             loadMenuView(contentPanel, app);
+        }
+        else if (index == 5) {
+             loadTableView(contentPanel, app);
         } else {
             auto giantNumber = tgui::Label::create(to_string(index + 1));
             giantNumber->setTextSize(200); 
